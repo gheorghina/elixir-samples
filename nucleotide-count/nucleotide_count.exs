@@ -12,14 +12,12 @@ defmodule NucleotideCount do
   iex> NucleotideCount.count('AATAA', ?T)
   1
   """
-
-
   @spec count([char], char) :: non_neg_integer
   def count(strand, nucleotide) do
     if is_empty(strand) do
       0
     else
-      count(String.codepoints(strand), nucleotide, 0)
+      count((to_charlist strand), nucleotide, 0)
     end
 
   end
@@ -55,7 +53,26 @@ defmodule NucleotideCount do
   iex> NucleotideCount.histogram('AATAA')
   %{?A => 4, ?T => 1, ?C => 0, ?G => 0}
   """
-  # @spec histogram([char]) :: map
-  # def histogram(strand) do
-  # end
+
+  @spec histogram([char]) :: map
+  def histogram(strand) do
+      countall((to_charlist strand), %{?A => 0, ?T => 0, ?C => 0, ?G => 0})
+  end
+
+  defp countall([], counter) do
+    counter
+  end
+
+  defp countall([head | tail], counter) do
+
+      value = counter
+              |> Map.get(head)
+
+      counter = counter
+                |> Map.merge(%{ head => ( 1 + value ) })
+
+      countall(tail, counter)
+
+  end
+
 end
