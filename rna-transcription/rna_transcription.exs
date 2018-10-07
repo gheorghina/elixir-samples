@@ -21,6 +21,6 @@ defmodule RNATranscription do
           ?T -> @adn_arn_complements[:t]
           ?A -> @adn_arn_complements[:a]
         end  
-    end
+    end)
   end
 end
