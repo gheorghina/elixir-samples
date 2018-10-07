@@ -8,7 +8,7 @@ defmodule RNATranscription do
   "UGAC"
   """
 
-  @adn_arn_complements %{ g: 'C', c: 'G', t: 'A', a: 'U'} 
+  @adn_arn_complements %{ g: ?C, c: ?G, t: ?A, a: ?U} 
 
   @spec to_rna([char]) :: [char]
   def to_rna(dna) do
@@ -21,9 +21,6 @@ defmodule RNATranscription do
           ?T -> @adn_arn_complements[:t]
           ?A -> @adn_arn_complements[:a]
         end  
-    end)
-   |> Enum.join
-   |> to_charlist
-
+    end
   end
 end
