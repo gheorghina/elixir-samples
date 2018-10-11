@@ -43,12 +43,12 @@ defmodule Roman do
     r_margin =  @numbers_representation[margin] 
 
     cond do
-      div == 0 -> ""
+      div == 0 -> ""     
       div <= 3 -> do_repetive(div, margin)
       div == 4 -> "#{r_margin}#{r_margin_mid_upper}"
       div == 5 -> "#{r_margin_mid_upper}"
       div > 5 and div <= 8 -> "#{r_margin_mid_upper}#{do_repetive(div, margin)}"
-      div == 9 -> "#{r_margin}#{r_margin_mid_upper}"
+      div == 9 -> "#{r_margin}#{r_margin_upper}" 
     end
   end 
 
