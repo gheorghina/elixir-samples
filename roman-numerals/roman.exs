@@ -42,9 +42,7 @@ defmodule Roman do
   end
 
   defp do_repetive(div, margin) do
-     1..div
-     |> Enum.map(fn n -> @numbers_representation[margin] end)
-     |> Enum.join 
+    String.duplicate(@numbers_representation[margin], div) 
   end 
 
 end
