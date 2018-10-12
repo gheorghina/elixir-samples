@@ -22,17 +22,11 @@ defmodule RomanTest do
   use ExUnit.Case
 
  # @tag :pending
-  test "141" do
-    assert Roman.numerals(141) == "CXLI"
+  test "163" do
+    assert Roman.numerals(163) == "CLXIII"
   end
 
-  @tag :pending
-  test "1024" do
-    assert Roman.numerals(1024) == "MXXIV"
-  end
-
-  @tag :pending
-  test "3000" do
-    assert Roman.numerals(3000) == "MMM"
+  test "402" do
+    assert Roman.numerals(402) == "CDII"
   end
 end

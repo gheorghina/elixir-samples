@@ -23,21 +23,21 @@ defmodule Roman do
     mod = round(:math.fmod(number, margin))    
     
     r_mod = cond do
-              mod == 0 -> ""       
-              margin != 10 and mod > margin / 10 -> do_no(mod, round(margin/10))
-              margin == 10 -> @numbers_representation[mod]
+              mod == 0 -> ""     
+              mod < 10 -> @numbers_representation[mod]  
+              mod > margin / 10 -> do_no(mod, round(margin/10))              
             end
     
     r_div = cond do
-              div == 0 -> "" 
+              div == 0 -> ""
               div <= 3 -> do_repetive(div, margin)
               div == 4 -> "#{@numbers_representation[margin]}#{@numbers_representation[margin * 5]}"
               div == 5 -> "#{@numbers_representation[margin * 5]}"    
               div > 5 and div <= 8 -> "#{ @numbers_representation[margin * 5]}#{do_repetive(div, margin)}"  
               div == 9 -> "#{ @numbers_representation[margin]}#{ @numbers_representation[margin * 10]}"              
             end
-
-    "#{r_div}#{r_mod}"
+   
+     "#{r_div}#{r_mod}"
   end
 
   defp do_repetive(div, margin) do
