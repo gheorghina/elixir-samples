@@ -34,7 +34,7 @@ defmodule Roman do
               div <= 3 -> do_repetive(div, margin)
               div == 4 -> "#{@numbers_representation[margin]}#{@numbers_representation[margin * 5]}"
               div == 5 -> "#{@numbers_representation[margin * 5]}"    
-              div > 5 and div <= 8 -> "#{ @numbers_representation[margin * 5]}#{do_repetive(div, margin)}"  
+              div > 5 and div <= 8 -> "#{ @numbers_representation[margin * 5]}#{do_repetive(div-5, margin)}"  
               div == 9 -> "#{ @numbers_representation[margin]}#{ @numbers_representation[margin * 10]}"              
             end
    
