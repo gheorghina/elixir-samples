@@ -81,22 +81,22 @@ defmodule RomanTest do
     assert Roman.numerals(141) == "CXLI"
   end
 
-  @tag :pending
+  #@tag :pending
   test "163" do
     assert Roman.numerals(163) == "CLXIII"
   end
 
-  @tag :pending
+  #@tag :pending
   test "402" do
     assert Roman.numerals(402) == "CDII"
   end
 
-  @tag :pending
+  #@tag :pending
   test "575" do
     assert Roman.numerals(575) == "DLXXV"
   end
 
-  @tag :pending
+  #@tag :pending
   test "911" do
     assert Roman.numerals(911) == "CMXI"
   end
