@@ -101,12 +101,12 @@ defmodule RomanTest do
     assert Roman.numerals(911) == "CMXI"
   end
 
-  @tag :pending
+  # @tag :pending
   test "1024" do
     assert Roman.numerals(1024) == "MXXIV"
   end
 
-  @tag :pending
+  # @tag :pending
   test "3000" do
     assert Roman.numerals(3000) == "MMM"
   end

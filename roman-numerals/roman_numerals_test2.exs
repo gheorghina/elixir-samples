@@ -26,7 +26,11 @@ defmodule RomanTest do
     assert Roman.numerals(163) == "CLXIII"
   end
 
-  test "402" do
-    assert Roman.numerals(402) == "CDII"
+  test "575" do
+    assert Roman.numerals(575) == "DLXXV"
+  end
+
+  test "1024" do
+    assert Roman.numerals(1024) == "MXXIV"
   end
 end

@@ -26,6 +26,7 @@ defmodule Roman do
               mod == 0 -> ""     
               mod < 10 -> @numbers_representation[mod]  
               mod > margin / 10 -> do_no(mod, round(margin/10))              
+              mod > margin / 100 -> do_no(mod, round(margin/100))              
             end
     
     r_div = cond do
