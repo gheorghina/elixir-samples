@@ -2,10 +2,9 @@ defmodule BeerSong do
   @doc """
   Get a single verse of the beer song
   """
-  @verse1_template_p1 " of beer on the wall, "
-  @verse1_template_p2 " of beer."
-  @verse2_template_p1 "Take one down and pass it around, "
-  @verse2_template_p2 " of beer on the wall."
+  @of_beer_on_the_wall " of beer on the wall"
+  @of_beer " of beer."
+  @take_one_down "Take one down and pass it around, "
   @last_bottle_left_template "Take it down and pass it around, no more bottles of beer on the wall."
   @last_verse "No more bottles of beer on the wall, no more bottles of beer.\nGo to the store and buy some more, 99 bottles of beer on the wall."
   @bottles "bottles"
@@ -20,7 +19,7 @@ defmodule BeerSong do
 
   def verse(1) do 
     """
-    #{@one_bottle}#{@verse1_template_p1}#{@one_bottle}#{@verse1_template_p2}
+    #{@one_bottle}#{@of_beer_on_the_wall}, #{@one_bottle}#{@of_beer}
     #{@last_bottle_left_template}
     """
   end 
@@ -36,8 +35,8 @@ defmodule BeerSong do
       end
     
     """
-    #{bottles}#{@verse1_template_p1}#{bottles}#{@verse1_template_p2}
-    #{@verse2_template_p1}#{left_bottles}#{@verse2_template_p2}
+    #{bottles}#{@of_beer_on_the_wall}, #{bottles}#{@of_beer}
+    #{@take_one_down}#{left_bottles}#{@of_beer_on_the_wall}.
     """
   end
 
