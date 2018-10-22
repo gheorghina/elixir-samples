@@ -11,32 +11,30 @@ defmodule BeerSong do
   @one_bottle "1 bottle"
 
   @spec verse(integer) :: String.t()
-  def verse(0) do 
+  def verse(0) do
     """
     #{@last_verse}
-    """ 
-  end 
+    """
+  end
 
-  def verse(1) do 
+  def verse(1) do
     """
     #{@one_bottle}#{@of_beer_on_the_wall}, #{@one_bottle}#{@of_beer}
     #{@last_bottle_left_template}
     """
-  end 
+  end
 
-  def verse(n) do  
-
-    bottles = "#{n} #{@bottles}"       
-                    
-    left_bottles = 
-      case n do
-        2 -> @one_bottle
-        _ -> "#{( n - 1)} #{@bottles}"
-      end
-    
+  def verse(2) do
     """
-    #{bottles}#{@of_beer_on_the_wall}, #{bottles}#{@of_beer}
-    #{@take_one_down}#{left_bottles}#{@of_beer_on_the_wall}.
+    2 #{@bottles}#{@of_beer_on_the_wall}, 2 #{@bottles}#{@of_beer}
+    #{@take_one_down}#{@one_bottle}#{@of_beer_on_the_wall}.
+    """
+  end
+
+  def verse(n) do
+    """
+    #{n} #{@bottles}#{@of_beer_on_the_wall}, #{n} #{@bottles}#{@of_beer}
+    #{@take_one_down}#{(n - 1)} #{@bottles}#{@of_beer_on_the_wall}.
     """
   end
 
@@ -49,6 +47,7 @@ defmodule BeerSong do
     |> to_string()
   end
 
-  def lyrics(n, acc) when n > 0, do: acc <> verse(n) <> "\n"
-  def lyrics(n, acc) when n == 0, do: acc <> verse(n)
+  defp lyrics(n, acc) when n == 0, do: acc <> verse(n)
+  defp lyrics(n, acc) when n > 0, do: acc <> verse(n) <> "\n"
+
 end
