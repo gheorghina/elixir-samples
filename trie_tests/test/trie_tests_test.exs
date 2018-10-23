@@ -70,18 +70,13 @@ defmodule TrieTestsTest do
 
     fetch_keys_similar = :btrie.fetch_keys_similar(<<"ab">>, btn0)
     fetch_keys_similar_xy = :btrie.fetch_keys_similar(<<"xy">>, btn0)
-    find = :btrie.find(<<"ab">>, btn0)
-    fetch = :btrie.fetch(<<"ab">>, btn0)
-    # find_match = :btrie.find_match("ab", btn0) - private
-    find_prefix = :btrie.find_prefix(<<"ab">>, btn0)
-    find_prefixes = :btrie.find_prefixes(<<"ab">>, btn0)
+    find_prefixes_aba = :btrie.find_prefixes(<<"aba">>, btn0)
+    find_prefixes_aaaaaaaaaaaaaaa = :btrie.find_prefixes(<<"aaaaaaaaaaaaaaa">>, btn0)
     appended = :btrie.find_prefixes(<<"ss">>, btn0)
 
     assert fetch_keys_similar == ["ab", "aba", "abcdefghijklmnopqrstuvwxyz"]
-    assert find == {:ok, 5}
-    assert find_prefix == {:ok, 5}
-    assert find_prefixes == [{"ab", 5}]
-    assert fetch == 5
+    assert find_prefixes_aba == [{"ab", 5}, {"aba", 6}]
+    assert find_prefixes_aaaaaaaaaaaaaaa == [{"aa", 1}, {"aaa", 2}, {"aaaaaaaa", 3}, {"aaaaaaaaaaa", 4}]
     assert appended == [{"ss", [2]}]
     assert fetch_keys_similar_xy == []
 
