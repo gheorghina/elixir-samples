@@ -85,18 +85,45 @@ defmodule TrieTestsTest do
     assert rn0 == []
   end
 
-  test "trie add key to existing node" do
-    tn0 = :trie.new()
+  test "trie tests" do
+    tn0 = :trie.new([
+      {'abcdefghijklmnopqrstuvwxyz', 9},
+      {'ammmmmmm',      7},
+      {'aaaaaaaaaaa',   4},
+      {'aaa',           2},
+      {'ab',            0},
+      {'ab',            5},
+      {'aa',            1},
+      {'aba',           6},
+      {'aaaaaaaa',      3}])
 
-    :trie.append("a", 2, tn0)
+      find_prefixes_aba = :trie.find_prefixes('aba', tn0)
+      fetch_keys_similar = :trie.fetch_keys_similar('ab', tn0)
+      find_prefixes_aaaaaaaaaaaaaaa = :trie.find_prefixes('aaaaaaaaaaaaaaa', tn0)
 
-    tn4 = :trie.store("aabcde", 3, tn0)
-    tn00 = :trie.new(["ab"])
-    tn1 = :trie.new([{"abcdefghijklmnopqrstuvwxyz", 1},{"aac", 2}])
-    tn3 = :trie.new([{"cowboy", 1}, {"ranch", 2}])
-
-    assert tn0 != []
-    assert tn00 != []
-
+      assert tn0 == {97, 97, {{{97, 109, {{{97, 97, {{{97, 97, {{{97, 97, {{{97, 97, {{{97, 97, {{{97, 97, {{{97, 97, {{'aa', 4}}}, 3}}}, :error}}}, :error}}}, :error}}}, :error}}}, 2}}}, 1}, {{97, 99, {{[], 6}, {[], :error}, {'defghijklmnopqrstuvwxyz', 9}}}, 5}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {'mmmmmm', 7}}}, :error}}}
+      assert find_prefixes_aba ==   [{'ab', 5}, {'aba', 6}] # :( - not ok
+      assert find_prefixes_aaaaaaaaaaaaaaa == [{'aa', 1}, {'aaa', 2}, {'aaaaaaaa', 3}, {'aaaaaaaaaaa', 4}]
+      assert fetch_keys_similar = []
   end
+
+  test "trie find similar" do
+    tn0 = :trie.new([
+      {'abcdefghijklmnopqrstuvwxyz', 9},
+      {'ammmmmmm',      7},
+      {'aaaaaaaaaaa',   4},
+      {'aaa',           2},
+      {'ab',            0},
+      {'ab',            5},
+      {'aa',            1},
+      {'aba',           6},
+      {'aaaaaaaa',      3}])
+
+      f = fn v, d , e -> d end
+
+      fold_similar = :trie.fold_similar('ab', fn v, d , e -> {v, d, e} end, [], tn0)
+
+      assert fold_similar ==  {'abcdefghijklmnopqrstuvwxyz', 9, {'aba', 6, {'ab', 5, []}}}
+  end
+
 end
