@@ -44,8 +44,6 @@ defmodule TrieTestsTest do
     fetch_keys_similar = :btrie.fetch_keys_similar(<<"am">>, btn0)
     fetch = :btrie.fetch(<<"ammmmmmm">>, btn0)
     find_prefixes = :btrie.find_prefixes(<<"am">>, btn0)
-    # find_similar = :btrie.find_similar("am", btn0) #PRIVATE
-    # find_match = :btrie.find_match(<<"am">>, btn0) #PRIVATE
 
     assert btn0 == {97, 97, {{{97, 109, {{"aaaaaaaaa", %{id: "2", score: "0.6"}}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {{109, 120, {{{98, 109, {{"beqmmmmm", %{id: "1", score: "0.5"}}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"mmmm", %{id: "1", score: "0.5"}}}}, :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"", :error}, {"sd", %{id: "1", score: "0.5"}}}}, :error}}}, :error}}}
     assert fetch == %{id: "1", score: "0.5"}
@@ -94,10 +92,8 @@ defmodule TrieTestsTest do
 
     tn4 = :trie.store("aabcde", 3, tn0)
     tn00 = :trie.new(["ab"])
-    # ,"aa"])
     tn1 = :trie.new([{"abcdefghijklmnopqrstuvwxyz", 1},{"aac", 2}])
     tn3 = :trie.new([{"cowboy", 1}, {"ranch", 2}])
-
 
     assert tn0 != []
     assert tn00 != []
