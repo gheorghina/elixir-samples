@@ -1,0 +1,3 @@
+%{
+  "trie": {:hex, :trie, "1.7.4", "694e41e0f9c013ebc105bd486b813254d8883fbd80f2c56b38a9ca06b09f3a8f", [:rebar3], [], "hexpm"},
+}
