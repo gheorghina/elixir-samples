@@ -176,4 +176,54 @@ defmodule TrieTestsTest do
     assert fold_similar_space ==   [[{'ananas', %{boosting: 1, id: 5, type: "fruits"}}], [{'p_something', %{boosting: 1, id: 9, type: "drinks"}}, {'peach', %{boosting: 1, id: 3, type: "fruits"}}, {'pear', %{boosting: 1, id: 2, type: "fruits"}}]]
 
     end
+
+    test "map to list for index with filtering and stuff" do
+
+      obj_list1 = Map.new(
+            [
+              { 1, %{ id: 1, name: "apple"}},
+              { 2, %{ id: 2, name: "pear"}},
+              { 3, %{ id: 3, name: "peach"}},
+              { 4, %{ id: 4, name: "blossom"}},
+              { 5, %{ id: 5, name: "ananas"}}
+            ])
+
+      obj_list2 = Map.new(
+              [
+                { 6, %{ id: 6, name: "cowboy"}},
+                { 7, %{ id: 7, name: "horse"}},
+                { 8, %{ id: 8, name: "sheep"}}
+              ])
+
+      obj_list3 = Map.new(
+                [
+                  { 9, %{ id: 9, name: "p_something"}},
+                  { 10, %{ id: 10, name: "orange_fresh"}}
+                ])
+      index =
+          (obj_list1
+            |> Map.values()
+            |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "fruits"}} end)) ++
+          (obj_list2
+            |> Map.values()
+            |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "ranch"}} end)) ++
+          (obj_list3
+            |> Map.values()
+            |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "drinks"}} end))
+          |> :trie.new()
+
+      results = ["p", "p"]
+                |> Enum.map(fn t ->
+                            :trie.fold_similar(String.to_charlist(t), fn _, value , acc -> acc ++ [value] end, [], index)
+                            end)
+                          # |> Enum.map( fn v -> %{id: v.id, })
+                          |> Enum.flat_map(fn v -> v end)
+                          |> Enum.filter(fn v -> v.type == "fruits" end)
+                          |> Enum.uniq
+                          |> Enum.map(fn v -> %{id: v.id, boosting: 1 * v.boosting, type: v.type} end)
+
+      assert index != []
+      assert results == [%{boosting: 1, id: 3, type: "fruits"}, %{boosting: 1, id: 2, type: "fruits"}]
+
+      end
 end
