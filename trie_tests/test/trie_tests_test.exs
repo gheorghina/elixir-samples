@@ -126,4 +126,32 @@ defmodule TrieTestsTest do
       assert fold_similar ==  {'abcdefghijklmnopqrstuvwxyz', 9, {'aba', 6, {'ab', 5, []}}}
   end
 
+  test "map to list for index" do
+
+    obj_list = Map.new(
+          [
+            { 1, %{ id: 1, name: "abcdefghijklmnopqrstuvwxyz"}},
+            { 2, %{ id: 2, name: "ammmmmmm"}},
+            { 3, %{ id: 3, name: "aaaaaaaaaaa"}},
+            { 4, %{ id: 4, name: "ab"}},
+            { 5, %{ id: 5, name: "aba"}}
+          ])
+
+    index =
+      obj_list
+      |> Map.values()
+      |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "forum"}} end)
+      |> :trie.new()
+
+      assert index ==  {97, 97,
+      {{{97, 109,
+         {{'aaaaaaaaa', {3, 1, "forum"}},
+          {{97, 99,
+            {{[], {5, 1, "forum"}}, {[], :error},
+             {'defghijklmnopqrstuvwxyz', {1, 1, "forum"}}}},
+           {4, 1, "forum"}}, {[], :error}, {[], :error}, {[], :error},
+          {[], :error}, {[], :error}, {[], :error}, {[], :error},
+          {[], :error}, {[], :error}, {[], :error},
+          {'mmmmmm', {2, 1, "forum"}}}}, :error}}}
+  end
 end
