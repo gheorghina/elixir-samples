@@ -148,22 +148,24 @@ defmodule TrieTestsTest do
     index =
         (obj_list1
           |> Map.values()
-          |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "fruits"}} end)) ++
+          |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "fruits"}} end)) ++
         (obj_list2
           |> Map.values()
-          |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "ranch"}} end)) ++
+          |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "ranch"}} end)) ++
         (obj_list3
           |> Map.values()
-          |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "drinks"}} end))
+          |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "drinks"}} end))
         |> :trie.new()
 
+
+    fold_similar = :trie.fold_similar('p', fn key, value , acc -> acc ++ [value] end, [], index)
+    filtered_data = fold_similar |> Enum.filter( fn v -> v.type == "fruits" end)
+    map_data = filtered_data |> Enum.map(fn v -> { v.id, 1 * v.boosting} end)
+
     assert index != []
-    fold_similar = :trie.fold_similar('p', fn v, d , e -> e ++ [{v, d}] end, [], index)
-    assert fold_similar ==  [
-                              {'p_something', {9, 1, "drinks"}},
-                              {'peach', {3, 1, "fruits"}},
-                              {'pear', {2, 1, "fruits"}}
-                            ]
+    assert fold_similar ==   [%{boosting: 1, id: 9, type: "drinks"}, %{boosting: 1, id: 3, type: "fruits"}, %{boosting: 1, id: 2, type: "fruits"}]
+    assert filtered_data ==  [%{boosting: 1, id: 3, type: "fruits"}, %{boosting: 1, id: 2, type: "fruits"}]
+    assert map_data == [{3, 1}, {2, 1}]
 
     end
 end
