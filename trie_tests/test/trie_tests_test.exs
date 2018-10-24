@@ -177,52 +177,101 @@ defmodule TrieTestsTest do
 
     end
 
-    test "map to list for index with filtering and stuff" do
+    # test "trie - map to list for index with filtering and stuff" do
 
-      obj_list1 = Map.new(
-            [
-              { 1, %{ id: 1, name: "apple"}},
-              { 2, %{ id: 2, name: "pear"}},
-              { 3, %{ id: 3, name: "peach"}},
-              { 4, %{ id: 4, name: "blossom"}},
-              { 5, %{ id: 5, name: "ananas"}}
-            ])
+    #   obj_list1 = Map.new(
+    #         [
+    #           { 1, %{ id: 1, name: "apple"}},
+    #           { 2, %{ id: 2, name: "pear"}},
+    #           { 3, %{ id: 3, name: "peach"}},
+    #           { 4, %{ id: 4, name: "blossom"}},
+    #           { 5, %{ id: 5, name: "ananas"}}
+    #         ])
 
-      obj_list2 = Map.new(
+    #   obj_list2 = Map.new(
+    #           [
+    #             { 6, %{ id: 6, name: "cowboy"}},
+    #             { 7, %{ id: 7, name: "horse"}},
+    #             { 8, %{ id: 8, name: "sheep"}}
+    #           ])
+
+    #   obj_list3 = Map.new(
+    #             [
+    #               { 9, %{ id: 9, name: "p_something"}},
+    #               { 10, %{ id: 10, name: "orange_fresh"}}
+    #             ])
+    #   index =
+    #       (obj_list1
+    #         |> Map.values()
+    #         |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "fruits"}} end)) ++
+    #       (obj_list2
+    #         |> Map.values()
+    #         |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "ranch"}} end)) ++
+    #       (obj_list3
+    #         |> Map.values()
+    #         |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "drinks"}} end))
+    #       |> :trie.new()
+
+    #   results = ["p"]
+    #             |> Enum.map(fn t ->
+    #                         :trie.fold_similar(String.to_charlist(t), fn key, value , acc ->  Map.merge(acc, %{key, value}) end, %{}, index)
+    #                         end)
+    #                       |> Enum.flat_map( fn v -> v end)
+    #                       |> Enum.filter(fn v -> v.type == "fruits" end)
+    #                       |> Enum.uniq
+    #                       |> Enum.map(fn v -> %{id: v.id, boosting: 1 * v.boosting, type: v.type} end)
+
+    #   assert index != []
+    #   assert results == [%{boosting: 1, id: 3, type: "fruits"}, %{boosting: 1, id: 2, type: "fruits"}]
+
+    #   end
+
+      test "btrie - map to list for index with filtering and stuff" do
+
+        obj_list1 = Map.new(
               [
-                { 6, %{ id: 6, name: "cowboy"}},
-                { 7, %{ id: 7, name: "horse"}},
-                { 8, %{ id: 8, name: "sheep"}}
+                { 1, %{ id: 1, name: "apple"}},
+                { 2, %{ id: 2, name: "pear"}},
+                { 3, %{ id: 3, name: "peach"}},
+                { 4, %{ id: 4, name: "blossom"}},
+                { 5, %{ id: 5, name: "ananas"}}
               ])
 
-      obj_list3 = Map.new(
+        obj_list2 = Map.new(
                 [
-                  { 9, %{ id: 9, name: "p_something"}},
-                  { 10, %{ id: 10, name: "orange_fresh"}}
+                  { 6, %{ id: 6, name: "cowboy"}},
+                  { 7, %{ id: 7, name: "horse"}},
+                  { 8, %{ id: 8, name: "sheep"}}
                 ])
-      index =
-          (obj_list1
-            |> Map.values()
-            |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "fruits"}} end)) ++
-          (obj_list2
-            |> Map.values()
-            |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "ranch"}} end)) ++
-          (obj_list3
-            |> Map.values()
-            |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "drinks"}} end))
-          |> :trie.new()
 
-      results = ["p"]
-                |> Enum.map(fn t ->
-                            :trie.fold_similar(String.to_charlist(t), fn _, value , acc -> acc ++ [value] end, [], index)
-                            end)
-                          |> Enum.flat_map(fn v -> v end)
-                          |> Enum.filter(fn v -> v.type == "fruits" end)
-                          |> Enum.uniq
-                          |> Enum.map(fn v -> %{id: v.id, boosting: 1 * v.boosting, type: v.type} end)
+        obj_list3 = Map.new(
+                  [
+                    { 9, %{ id: 9, name: "p_something"}},
+                    { 10, %{ id: 10, name: "orange_fresh"}}
+                  ])
+        index =
+            (obj_list1
+              |> Map.values()
+              |> Enum.map(fn %{id: id, name: name} -> {<<name::binary>>, %{id: id, boosting: 1, type: "fruits"}} end)) ++
+            (obj_list2
+              |> Map.values()
+              |> Enum.map(fn %{id: id, name: name} -> {<<name::binary>>, %{id: id, boosting: 1, type: "ranch"}} end)) ++
+            (obj_list3
+              |> Map.values()
+              |> Enum.map(fn %{id: id, name: name} -> {<<name::binary>>, %{id: id, boosting: 1, type: "drinks"}} end))
+            |> :btrie.new()
 
-      assert index != []
-      assert results == [%{boosting: 1, id: 3, type: "fruits"}, %{boosting: 1, id: 2, type: "fruits"}]
+        results = [<<"p">>]
+                  |> Enum.map(fn t ->
+                              :btrie.fold_similar(<<t::binary>>, fn key, value , acc -> acc ++ [value] end, [], index)
+                              end)
+                            |> Enum.flat_map( fn v -> v end)
+                            |> Enum.filter(fn v -> v.type == "fruits" end)
+                            |> Enum.uniq
+                            |> Enum.map(fn v -> %{id: v.id, boosting: 1 * v.boosting, type: v.type} end)
 
-      end
+        assert index != []
+        assert results == [%{boosting: 1, id: 3, type: "fruits"}, %{boosting: 1, id: 2, type: "fruits"}]
+
+        end
 end
