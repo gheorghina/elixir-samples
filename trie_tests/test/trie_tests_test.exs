@@ -64,7 +64,7 @@ defmodule TrieTestsTest do
       {<<"aba">>,           6},
       {<<"aaaaaaaa">>,      3}])
 
-      btn0 = :btrie.append(<<"ss">>, 2, btn0)
+    btn0 = :btrie.append(<<"ss">>, 2, btn0)
 
     fetch_keys_similar = :btrie.fetch_keys_similar(<<"ab">>, btn0)
     fetch_keys_similar_xy = :btrie.fetch_keys_similar(<<"xy">>, btn0)
@@ -128,30 +128,34 @@ defmodule TrieTestsTest do
 
   test "map to list for index" do
 
-    obj_list = Map.new(
+    obj_list1 = Map.new(
           [
-            { 1, %{ id: 1, name: "abcdefghijklmnopqrstuvwxyz"}},
-            { 2, %{ id: 2, name: "ammmmmmm"}},
-            { 3, %{ id: 3, name: "aaaaaaaaaaa"}},
-            { 4, %{ id: 4, name: "ab"}},
-            { 5, %{ id: 5, name: "aba"}}
+            { 1, %{ id: 1, name: "apple"}},
+            { 2, %{ id: 2, name: "pear"}},
+            { 3, %{ id: 3, name: "peach"}},
+            { 4, %{ id: 4, name: "blossom"}},
+            { 5, %{ id: 5, name: "ananas"}}
           ])
 
+    obj_list2 = Map.new(
+            [
+              { 6, %{ id: 6, name: "cowboy"}},
+              { 7, %{ id: 7, name: "horse"}},
+              { 8, %{ id: 8, name: "sheep"}}
+            ])
+
     index =
-      obj_list
+      obj_list1
       |> Map.values()
-      |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "forum"}} end)
+      |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "fruits"}} end)
       |> :trie.new()
 
-      assert index ==  {97, 97,
-      {{{97, 109,
-         {{'aaaaaaaaa', {3, 1, "forum"}},
-          {{97, 99,
-            {{[], {5, 1, "forum"}}, {[], :error},
-             {'defghijklmnopqrstuvwxyz', {1, 1, "forum"}}}},
-           {4, 1, "forum"}}, {[], :error}, {[], :error}, {[], :error},
-          {[], :error}, {[], :error}, {[], :error}, {[], :error},
-          {[], :error}, {[], :error}, {[], :error},
-          {'mmmmmm', {2, 1, "forum"}}}}, :error}}}
+    # index =
+    #   obj_list2
+    #   |> Map.values()
+    #   |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "ranch"}} end)
+    #   |> :trie.append(2, index)
+
+      assert index ==  {97, 112, {{{110, 112, {{'anas', {5, 1, "fruits"}}, {[], :error}, {'ple', {1, 1, "fruits"}}}}, :error}, {'lossom', {4, 1, "fruits"}}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {{101, 101, {{{97, 97, {{{99, 114, {{'h', {3, 1, "fruits"}}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], {2, 1, "fruits"}}}}, :error}}}, :error}}}, :error}}}
   end
 end
