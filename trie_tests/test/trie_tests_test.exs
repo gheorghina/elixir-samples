@@ -98,13 +98,11 @@ defmodule TrieTestsTest do
       {'aaaaaaaa',      3}])
 
       find_prefixes_aba = :trie.find_prefixes('aba', tn0)
-      fetch_keys_similar = :trie.fetch_keys_similar('ab', tn0)
       find_prefixes_aaaaaaaaaaaaaaa = :trie.find_prefixes('aaaaaaaaaaaaaaa', tn0)
 
       assert tn0 == {97, 97, {{{97, 109, {{{97, 97, {{{97, 97, {{{97, 97, {{{97, 97, {{{97, 97, {{{97, 97, {{{97, 97, {{'aa', 4}}}, 3}}}, :error}}}, :error}}}, :error}}}, :error}}}, 2}}}, 1}, {{97, 99, {{[], 6}, {[], :error}, {'defghijklmnopqrstuvwxyz', 9}}}, 5}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {'mmmmmm', 7}}}, :error}}}
       assert find_prefixes_aba ==   [{'ab', 5}, {'aba', 6}] # :( - not ok
       assert find_prefixes_aaaaaaaaaaaaaaa == [{'aa', 1}, {'aaa', 2}, {'aaaaaaaa', 3}, {'aaaaaaaaaaa', 4}]
-      assert fetch_keys_similar = []
   end
 
   test "trie find similar" do
@@ -118,8 +116,6 @@ defmodule TrieTestsTest do
       {'aa',            1},
       {'aba',           6},
       {'aaaaaaaa',      3}])
-
-      f = fn v, d , e -> d end
 
       fold_similar = :trie.fold_similar('ab', fn v, d , e -> {v, d, e} end, [], tn0)
 
@@ -144,18 +140,26 @@ defmodule TrieTestsTest do
               { 8, %{ id: 8, name: "sheep"}}
             ])
 
+    obj_list3 = Map.new(
+              [
+                { 9, %{ id: 9, name: "p_something"}},
+                { 10, %{ id: 10, name: "orange_fresh"}}
+              ])
     index =
-      obj_list1
-      |> Map.values()
-      |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "fruits"}} end)
-      |> :trie.new()
+        (obj_list1
+          |> Map.values()
+          |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "fruits"}} end)) ++
+        (obj_list2
+          |> Map.values()
+          |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "ranch"}} end)) ++
+        (obj_list3
+          |> Map.values()
+          |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "drinks"}} end))
+        |> :trie.new()
 
-    # index =
-    #   obj_list2
-    #   |> Map.values()
-    #   |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), {id, 1, "ranch"}} end)
-    #   |> :trie.append(2, index)
+    assert index != []
+    fold_similar = :trie.fold_similar('p', fn v, d , e -> {v, d, e} end, [], index)
+    assert fold_similar ==  {'pear', {2, 1, "fruits"}, {'peach', {3, 1, "fruits"}, {'p_something', {9, 1, "drinks"}, []}}}
 
-      assert index ==  {97, 112, {{{110, 112, {{'anas', {5, 1, "fruits"}}, {[], :error}, {'ple', {1, 1, "fruits"}}}}, :error}, {'lossom', {4, 1, "fruits"}}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {{101, 101, {{{97, 97, {{{99, 114, {{'h', {3, 1, "fruits"}}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], {2, 1, "fruits"}}}}, :error}}}, :error}}}, :error}}}
-  end
+    end
 end
