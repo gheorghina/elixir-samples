@@ -158,8 +158,12 @@ defmodule TrieTestsTest do
         |> :trie.new()
 
     assert index != []
-    fold_similar = :trie.fold_similar('p', fn v, d , e -> {v, d, e} end, [], index)
-    assert fold_similar ==  {'pear', {2, 1, "fruits"}, {'peach', {3, 1, "fruits"}, {'p_something', {9, 1, "drinks"}, []}}}
+    fold_similar = :trie.fold_similar('p', fn v, d , e -> e ++ [{v, d}] end, [], index)
+    assert fold_similar ==  [
+                              {'p_something', {9, 1, "drinks"}},
+                              {'peach', {3, 1, "fruits"}},
+                              {'pear', {2, 1, "fruits"}}
+                            ]
 
     end
 end
