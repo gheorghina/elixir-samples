@@ -161,11 +161,19 @@ defmodule TrieTestsTest do
     fold_similar = :trie.fold_similar('p', fn key, value , acc -> acc ++ [value] end, [], index)
     filtered_data = fold_similar |> Enum.filter( fn v -> v.type == "fruits" end)
     map_data = filtered_data |> Enum.map(fn v -> { v.id, 1 * v.boosting} end)
+    fold_similar_punctuation = :trie.fold_similar('p.', fn key, value , acc -> acc ++ [{key, value}] end, [], index)
+    fold_similar_space =['an', 'p']
+                        |> Enum.map(fn term ->
+                                      :trie.fold_similar(term, fn key, value , acc -> acc ++ [{key, value}] end, [], index)
+                                    end)
+
 
     assert index != []
     assert fold_similar ==   [%{boosting: 1, id: 9, type: "drinks"}, %{boosting: 1, id: 3, type: "fruits"}, %{boosting: 1, id: 2, type: "fruits"}]
     assert filtered_data ==  [%{boosting: 1, id: 3, type: "fruits"}, %{boosting: 1, id: 2, type: "fruits"}]
     assert map_data == [{3, 1}, {2, 1}]
+    assert fold_similar_punctuation ==[{'p_something', %{boosting: 1, id: 9, type: "drinks"}}, {'peach', %{boosting: 1, id: 3, type: "fruits"}}, {'pear', %{boosting: 1, id: 2, type: "fruits"}}]
+    assert fold_similar_space ==   [[{'ananas', %{boosting: 1, id: 5, type: "fruits"}}], [{'p_something', %{boosting: 1, id: 9, type: "drinks"}}, {'peach', %{boosting: 1, id: 3, type: "fruits"}}, {'pear', %{boosting: 1, id: 2, type: "fruits"}}]]
 
     end
 end
