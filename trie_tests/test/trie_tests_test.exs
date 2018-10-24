@@ -212,11 +212,10 @@ defmodule TrieTestsTest do
             |> Enum.map(fn %{id: id, name: name} -> {String.to_charlist(name), %{id: id, boosting: 1, type: "drinks"}} end))
           |> :trie.new()
 
-      results = ["p", "p"]
+      results = ["p"]
                 |> Enum.map(fn t ->
                             :trie.fold_similar(String.to_charlist(t), fn _, value , acc -> acc ++ [value] end, [], index)
                             end)
-                          # |> Enum.map( fn v -> %{id: v.id, })
                           |> Enum.flat_map(fn v -> v end)
                           |> Enum.filter(fn v -> v.type == "fruits" end)
                           |> Enum.uniq
