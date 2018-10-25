@@ -317,6 +317,43 @@ defmodule TrieTestsTest do
     assert r == [%{id: 1, score: 1}, %{id: 3, score: 1.1}]
   end
 
+  test "btrie - build different" do
+
+    obj_list1 =
+      Map.new([
+        {1, %{id: 1, name: "apple"}},
+        {2, %{id: 2, name: "pear"}},
+        {3, %{id: 3, name: "peach"}},
+        {4, %{id: 4, name: "blossom"}},
+        {5, %{id: 5, name: "ananas"}}
+      ])
+
+    index =
+      obj_list1
+        |> Map.values()
+        |> Enum.map(fn %{id: id, name: name} ->
+                      [
+                        {name, {id, 1, :fruits}},
+                        { name<>"_new" , {id + 1, 1, :fruits}},
+                      ]
+                    end)
+        |> Enum.flat_map(fn v -> v end)
+      |> :btrie.new()
+
+
+    results_2 =
+      ["p", "pe"]
+      |> Enum.map(fn t ->
+        :btrie.fold_similar(t, fn key, value, acc -> acc ++ [{key, value}] end, [], index)
+      end)
+      |> Enum.at(0)
+      |> Enum.filter(fn {_, {_, _, v}} -> v == :fruits end)
+      |> Enum.map(fn {term, {id, b, v}} -> %{term: term, id: id, boosting: 1 * b, type: v} end)
+
+    assert results_2 == [%{boosting: 1, id: 3, type: :fruits, term: "peach"}, %{boosting: 1, type: :fruits, id: 4, term: "peach_new"}, %{boosting: 1, id: 2, term: "pear", type: :fruits}, %{boosting: 1, id: 3, term: "pear_new", type: :fruits}]
+  end
+
+
   defp get_a_btrie_idx() do
     obj_list1 =
       Map.new([
