@@ -252,23 +252,22 @@ defmodule TrieTestsTest do
         index =
             (obj_list1
               |> Map.values()
-              |> Enum.map(fn %{id: id, name: name} -> {<<name::binary>>, {id, 1, :fruits}} end)) ++
+              |> Enum.map(fn %{id: id, name: name} -> {name, {id, 1, :fruits}} end)) ++
             (obj_list2
               |> Map.values()
-              |> Enum.map(fn %{id: id, name: name} -> {<<name::binary>>, {id, 1, :ranch}} end)) ++
+              |> Enum.map(fn %{id: id, name: name} -> {name, {id, 1, :ranch}} end)) ++
             (obj_list3
               |> Map.values()
-              |> Enum.map(fn %{id: id, name: name} -> {<<name::binary>>, {id, 1, :drinks}} end))
+              |> Enum.map(fn %{id: id, name: name} -> {name, {id, 1, :drinks}} end))
             |> :btrie.new()
 
-        results = ["p"]
+        results = ["p", "pe"]
                   |> Enum.map(fn t ->
                               :btrie.fold_similar(t, fn key, value , acc -> acc ++ [value] end, [], index)
                               end)
-                            |> Enum.flat_map(fn v -> v end)
-                            |> Enum.filter(fn {id, b, v} -> v == :fruits end)
-                            |> Enum.uniq
-                            |> Enum.map(fn {id, b, v} -> %{id: id, boosting: 1 * b, type: v} end)
+                             |> Enum.at(0)
+                             |> Enum.filter(fn {_, _, v} -> v == :fruits end)
+                             |> Enum.map(fn {id, b, v} -> %{id: id, boosting: 1 * b, type: v} end)
 
         assert index != []
         assert results == [%{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 2, type: :fruits}]
