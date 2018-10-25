@@ -335,9 +335,11 @@ defmodule TrieTestsTest do
                       [
                         {name, {id, 1, :fruits}},
                         { name<>"_new" , {id + 1, 1, :fruits}},
+                        { "" , {id + 1, 1, :fruits}},
                       ]
                     end)
         |> Enum.flat_map(fn v -> v end)
+        |> Enum.filter(fn {term, {_, _, _}} -> term != "" end)
       |> :btrie.new()
 
 
