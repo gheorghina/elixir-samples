@@ -294,7 +294,7 @@ defmodule TrieTestsTest do
 
   def compute_score(list, id) do
     list
-    |> Enum.filter( fn {_, {id, _, _}} ->  id == id end)
+    |> Enum.filter( fn {_, {i, _, _}} ->  i == id end)
     |> Enum.map( fn {_, {_, boosting, _}} ->  boosting end)
     |> Enum.sum()
 
@@ -314,7 +314,7 @@ defmodule TrieTestsTest do
       |> compute_score()
       |> Enum.map(fn {id, score} -> %{id: id, score: score} end)
 
-    assert r == [%{id: 1, score: 1}, %{id: 3, score: 2.1}]
+    assert r == [%{id: 1, score: 1}, %{id: 3, score: 1.1}]
   end
 
   defp get_a_btrie_idx() do
