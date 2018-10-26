@@ -379,7 +379,7 @@ defmodule TrieTestsTest do
       Map.new([
         {6, %{id: 6, name: "cowboy"}},
         {7, %{id: 7, name: "horse"}},
-        {8, %{id: 8, name: "sheep"}}
+        {8, %{id: 8, name: "pheep"}}
       ])
 
     index =
@@ -396,17 +396,21 @@ defmodule TrieTestsTest do
       |> Enum.filter(fn {term, {_, _, _}} -> term != "" end)
       |> :btrie.new()
 
-    index =
+    ranch_array =
       obj_list2
-        |> Map.values()
-        |> Enum.map(fn %{id: id, name: name} ->  {name, {id, 1, :ranch}} end)
-        |> compute_index(index)
+      |> Map.values()
+      |> Enum.map(fn %{id: id, name: name} ->
+              [{name, {id, 1, :ranch}}, {name <> "_test", {id, 1, :ranch}}] end)
+      |> Enum.flat_map(fn v -> v end)
+
+    index = compute_index(ranch_array , index)
 
     r =
       ["p", "pe"]
       |> Enum.map(fn t ->
         :btrie.fold_similar(t, fn key, value, acc -> acc ++ [value] end, [], index)
       end)
+      |> Enum.concat()
       |> Enum.at(0)
       |> Enum.filter(fn {_, _, v} -> v == :fruits end)
       |> Enum.map(fn {id, b, v} -> %{id: id, boosting: 1 * b, type: v} end)
@@ -420,14 +424,26 @@ defmodule TrieTestsTest do
     do: :btrie.append(term |> String.downcase(), value, index)
 
   def compute_index([head | tail], index_acc) do
-    index_acc
-    |> append_to_search_index(head)
+    index_acc =
+            index_acc
+            |> append_to_search_index(head)
 
     compute_index(tail, index_acc)
   end
 
   def compute_index([], index_acc) do
     index_acc
+  end
+
+  defp compute_score do
+    [%{id: 1, val: 12}, %{id: 3, val: 7}, %{id: 1, val: 5}, %{id: 2, val: 3}, %{id: 2, val: 5}, %{id: 1, val: 3}]
+    |> Enum.reduce(%{}, fn %{id: id, val: val}, map -> Map.update(map, id, val, &(&1 + val)) end)
+
+    [{"e", {1, 1, :fruits}}, {"b", {2, 1, :fruits}}, {"b", {2, 0.1, :fruits}}]
+
+    index_items
+    |> Enum.reduce(%{}, fn {_, {id, boosting, _}}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
+
   end
 
   defp get_a_btrie_idx() do
