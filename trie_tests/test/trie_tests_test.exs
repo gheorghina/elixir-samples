@@ -294,19 +294,26 @@ defmodule TrieTestsTest do
 
   def compute_score(list, id) do
     list
-    |> Enum.filter( fn {_, {i, _, _}} ->  i == id end)
-    |> Enum.map( fn {_, {_, boosting, _}} ->  boosting end)
+    |> Enum.filter(fn {_, {i, _, _}} -> i == id end)
+    |> Enum.map(fn {_, {_, boosting, _}} -> boosting end)
     |> Enum.sum()
-
   end
 
   def compute_score(list) do
     list
-    |> Map.new( fn  {_, {id, boosting, _}} -> {id, compute_score(list, id)} end)
+    |> Map.new(fn {_, {id, boosting, _}} -> {id, compute_score(list, id)} end)
   end
 
   test "map compute score" do
-    m = [[{"p_something", {9, 1, :drinks}}, {"peach", {3, 1, :fruits}}, {"pear", {3, 0.1, :fruits}}, {"ananas", {1, 1, :fruits}}]]
+    m = [
+      [
+        {"p_something", {9, 1, :drinks}},
+        {"peach", {3, 1, :fruits}},
+        {"pear", {3, 0.1, :fruits}},
+        {"ananas", {1, 1, :fruits}}
+      ]
+    ]
+
     r =
       m
       |> Enum.at(0)
@@ -318,7 +325,6 @@ defmodule TrieTestsTest do
   end
 
   test "btrie - build different" do
-
     obj_list1 =
       Map.new([
         {1, %{id: 1, name: "apple"}},
@@ -330,18 +336,17 @@ defmodule TrieTestsTest do
 
     index =
       obj_list1
-        |> Map.values()
-        |> Enum.map(fn %{id: id, name: name} ->
-                      [
-                        {name, {id, 1, :fruits}},
-                        { name<>"_new" , {id + 1, 1, :fruits}},
-                        { "" , {id + 1, 1, :fruits}},
-                      ]
-                    end)
-        |> Enum.flat_map(fn v -> v end)
-        |> Enum.filter(fn {term, {_, _, _}} -> term != "" end)
+      |> Map.values()
+      |> Enum.map(fn %{id: id, name: name} ->
+        [
+          {name, {id, 1, :fruits}},
+          {name <> "_new", {id + 1, 1, :fruits}},
+          {"", {id + 1, 1, :fruits}}
+        ]
+      end)
+      |> Enum.flat_map(fn v -> v end)
+      |> Enum.filter(fn {term, {_, _, _}} -> term != "" end)
       |> :btrie.new()
-
 
     results_2 =
       ["p", "pe"]
@@ -352,9 +357,78 @@ defmodule TrieTestsTest do
       |> Enum.filter(fn {_, {_, _, v}} -> v == :fruits end)
       |> Enum.map(fn {term, {id, b, v}} -> %{term: term, id: id, boosting: 1 * b, type: v} end)
 
-    assert results_2 == [%{boosting: 1, id: 3, type: :fruits, term: "peach"}, %{boosting: 1, type: :fruits, id: 4, term: "peach_new"}, %{boosting: 1, id: 2, term: "pear", type: :fruits}, %{boosting: 1, id: 3, term: "pear_new", type: :fruits}]
+    assert results_2 == [
+             %{boosting: 1, id: 3, type: :fruits, term: "peach"},
+             %{boosting: 1, type: :fruits, id: 4, term: "peach_new"},
+             %{boosting: 1, id: 2, term: "pear", type: :fruits},
+             %{boosting: 1, id: 3, term: "pear_new", type: :fruits}
+           ]
   end
 
+  test "try simpler" do
+    obj_list1 =
+      Map.new([
+        {1, %{id: 1, name: "apple"}},
+        {2, %{id: 2, name: "pear"}},
+        {3, %{id: 3, name: "peach"}},
+        {4, %{id: 4, name: "blossom"}},
+        {5, %{id: 5, name: "ananas"}}
+      ])
+
+    obj_list2 =
+      Map.new([
+        {6, %{id: 6, name: "cowboy"}},
+        {7, %{id: 7, name: "horse"}},
+        {8, %{id: 8, name: "sheep"}}
+      ])
+
+    index =
+      obj_list1
+      |> Map.values()
+      |> Enum.map(fn %{id: id, name: name} ->
+        [
+          {name, {id, 1, :fruits}},
+          {name <> "_new", {id + 1, 1, :fruits}},
+          {"", {id + 1, 1, :fruits}}
+        ]
+      end)
+      |> Enum.flat_map(fn v -> v end)
+      |> Enum.filter(fn {term, {_, _, _}} -> term != "" end)
+      |> :btrie.new()
+
+    index =
+      obj_list2
+        |> Map.values()
+        |> Enum.map(fn %{id: id, name: name} ->  {name, {id, 1, :ranch}} end)
+        |> compute_index(index)
+
+    r =
+      ["p", "pe"]
+      |> Enum.map(fn t ->
+        :btrie.fold_similar(t, fn key, value, acc -> acc ++ [value] end, [], index)
+      end)
+      |> Enum.at(0)
+      |> Enum.filter(fn {_, _, v} -> v == :fruits end)
+      |> Enum.map(fn {id, b, v} -> %{id: id, boosting: 1 * b, type: v} end)
+
+    assert r ==  [%{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, type: :fruits, id: 4}, %{boosting: 1, id: 2, type: :fruits}, %{boosting: 1, id: 3, type: :fruits}]
+  end
+
+  defp append_to_search_index(index, {term, _}) when term == "", do: index
+
+  defp append_to_search_index(index, {term, value}) when term != "",
+    do: :btrie.append(term |> String.downcase(), value, index)
+
+  def compute_index([head | tail], index_acc) do
+    index_acc
+    |> append_to_search_index(head)
+
+    compute_index(tail, index_acc)
+  end
+
+  def compute_index([], index_acc) do
+    index_acc
+  end
 
   defp get_a_btrie_idx() do
     obj_list1 =
