@@ -406,6 +406,7 @@ defmodule TrieTestsTest do
                 |> Map.merge( %{name => [{id, 100, :ranch}]}, fn _k, v1, v2 -> [v1, v2] end)
                 |> Map.merge( %{name <> "_test" => [{id, 1, :ranch}]}, fn _k, v1, v2 -> [v1, v2] end )
                 |> Map.merge( %{name <> "_test" => [{id, 100, :dont_override}]}, fn _k, v1, v2 -> [v1, v2] end )
+                |> Map.merge( %{name <> "_test" => [{id, 100, :dont_override2}]}, fn _k, v1, v2 -> [v1, v2] end )
               end)
       |> Enum.reduce(fn {name, values}, idx_acc ->
                          idx_acc = :btrie.append_list(name |> String.downcase(), values, index)
@@ -419,12 +420,12 @@ defmodule TrieTestsTest do
       |> Enum.concat()
       |> Enum.map(fn {k, v} -> v end)
       |> List.flatten()
-      |> Enum.filter(fn {_, _, v} -> v == :fruits or v == :ranch or v == :dont_override end)
+      # |> Enum.filter(fn {_, _, v} -> v == :fruits or v == :ranch or v == :dont_override end)
       |> Enum.reduce(%{}, fn {id, boosting, _}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
       |> Enum.map(fn {i, s}  -> %{id: i, score: s}
                        end)
 
-    assert r ==  [%{id: 1, score: 1}, %{id: 2, score: 3}, %{id: 3, score: 5}, %{id: 4, score: 4}, %{id: 5, score: 2}, %{id: 8, score: 101}]
+    assert r ==  [%{id: 1, score: 1}, %{id: 2, score: 3}, %{id: 3, score: 5}, %{id: 4, score: 4}, %{id: 5, score: 2}, %{id: 8, score: 201}]
   end
 
   def compute_score(index_items) do
@@ -448,16 +449,16 @@ defmodule TrieTestsTest do
     index_acc
   end
 
-  defp compute_score do
-    [%{id: 1, val: 12}, %{id: 3, val: 7}, %{id: 1, val: 5}, %{id: 2, val: 3}, %{id: 2, val: 5}, %{id: 1, val: 3}]
-    |> Enum.reduce(%{}, fn %{id: id, val: val}, map -> Map.update(map, id, val, &(&1 + val)) end)
+  # defp compute_score do
+  #   [%{id: 1, val: 12}, %{id: 3, val: 7}, %{id: 1, val: 5}, %{id: 2, val: 3}, %{id: 2, val: 5}, %{id: 1, val: 3}]
+  #   |> Enum.reduce(%{}, fn %{id: id, val: val}, map -> Map.update(map, id, val, &(&1 + val)) end)
 
-    [{"e", {1, 1, :fruits}}, {"b", {2, 1, :fruits}}, {"b", {2, 0.1, :fruits}}]
+  #   [{"e", {1, 1, :fruits}}, {"b", {2, 1, :fruits}}, {"b", {2, 0.1, :fruits}}]
 
-    index_items
-    |> Enum.reduce(%{}, fn {_, {id, boosting, _}}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
+  #   index_items
+  #   |> Enum.reduce(%{}, fn {_, {id, boosting, _}}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
 
-  end
+  # end
 
   defp get_a_btrie_idx() do
     obj_list1 =
