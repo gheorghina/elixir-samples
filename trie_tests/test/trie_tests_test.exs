@@ -385,49 +385,51 @@ defmodule TrieTestsTest do
     index =
       obj_list1
       |> Map.values()
-      |> Enum.map(fn %{id: id, name: name} ->
-         [
-          {name, [{id, 1, :fruits}]},
-          {name <> "_new", [{id + 1, 1, :fruits}]},
-          # {"", [{id + 1, 1, :fruits}]}
-        ]
-      end)
-      |> Enum.concat()
-      |> Enum.filter(fn {term, [{_, _, _}]} -> term != "" end)
+      |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
+            map =
+              map
+              |> Map.merge( %{name => [{id, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end)
+              |> Map.merge( %{name <> "_new" => [{id + 1, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end )
+              |> Map.merge( %{"bb" => [{id, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end)
+              |> Map.merge( %{"" => [{id, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end)
+            end)
+      |> Enum.map(fn {k,v} -> {k, v} end)
+      |> Enum.filter(fn {term, _} -> term != "" end)
       |> :btrie.new()
 
     index =
       obj_list2
       |> Map.values()
-      |> Enum.map(fn %{id: id, name: name} ->
-               [
-                 {name, [{id, 100, :ranch}]},
-                 {name, [{id, 1, :ranch}]},
-                #  {name <> "_test", [{id, 1, :ranch}, {id, 100, :ranch}]}
-               ]
-            end)
-      |> Enum.concat()
+      |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
+              map =
+                map
+                |> Map.merge( %{name => [{id, 100, :ranch}]}, fn _k, v1, v2 -> [v1, v2] end)
+                |> Map.merge( %{name <> "_test" => [{id, 1, :ranch}]}, fn _k, v1, v2 -> [v1, v2] end )
+                |> Map.merge( %{name <> "_test" => [{id, 100, :dont_override}]}, fn _k, v1, v2 -> [v1, v2] end )
+              end)
       |> Enum.reduce(fn {name, values}, idx_acc ->
-                        idx_acc = :btrie.append_list(name |> String.downcase(), values, index)
-                      end)
+                         idx_acc = :btrie.append_list(name |> String.downcase(), values, index)
+                       end)
 
     r =
-      ["p", "pe"]
+      ["p", "pe", "b"]
       |> Enum.map(fn t ->
         :btrie.fold_similar(t, fn key, value, acc -> acc ++ [{key, value}] end, [], index)
       end)
       |> Enum.concat()
+      |> Enum.map(fn {k, v} -> v end)
       |> List.flatten()
-      |> Enum.filter(fn {k, [{_, _, v}]} -> v == :fruits or v == :ranch end)
-      # |> compute_score()
-      |> Enum.map(fn {k, [{id, b, v}]} -> %{id: id, boosting: 1 * b, type: v} end)
+      |> Enum.filter(fn {_, _, v} -> v == :fruits or v == :ranch or v == :dont_override end)
+      |> Enum.reduce(%{}, fn {id, boosting, _}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
+      |> Enum.map(fn {i, s}  -> %{id: i, score: s}
+                       end)
 
-    assert r ==  [%{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 4, type: :fruits}, %{boosting: 1, id: 2, type: :fruits}, %{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 8, type: :ranch}, %{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, type: :fruits, id: 4}, %{boosting: 1, type: :fruits, id: 2}, %{boosting: 1, type: :fruits, id: 3}]
+    assert r ==  [%{id: 1, score: 1}, %{id: 2, score: 3}, %{id: 3, score: 5}, %{id: 4, score: 4}, %{id: 5, score: 2}, %{id: 8, score: 101}]
   end
 
   def compute_score(index_items) do
     index_items
-    |> Enum.reduce(%{}, fn {_, {id, boosting, _}}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
+    |> Enum.reduce(%{}, fn {id, boosting, _}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
   end
 
   defp append_to_search_index(index, {term, _}) when term == "", do: index
