@@ -386,14 +386,14 @@ defmodule TrieTestsTest do
       obj_list1
       |> Map.values()
       |> Enum.map(fn %{id: id, name: name} ->
-        [
-          {name, {id, 1, :fruits}},
-          {name <> "_new", {id + 1, 1, :fruits}},
-          {"", {id + 1, 1, :fruits}}
+         [
+          {name, [{id, 1, :fruits}]},
+          {name <> "_new", [{id + 1, 1, :fruits}]},
+          # {"", [{id + 1, 1, :fruits}]}
         ]
       end)
-      |> Enum.flat_map(fn v -> v end)
-      |> Enum.filter(fn {term, {_, _, _}} -> term != "" end)
+      |> Enum.concat()
+      |> Enum.filter(fn {term, [{_, _, _}]} -> term != "" end)
       |> :btrie.new()
 
     index =
@@ -401,8 +401,9 @@ defmodule TrieTestsTest do
       |> Map.values()
       |> Enum.map(fn %{id: id, name: name} ->
                [
-                 {name, [{id, 1, :ranch}, {id, 100, :ranch}]},
-                 {name <> "_test", [{id, 1, :ranch}, {id, 100, :ranch}]}
+                 {name, [{id, 100, :ranch}]},
+                 {name, [{id, 1, :ranch}]},
+                #  {name <> "_test", [{id, 1, :ranch}, {id, 100, :ranch}]}
                ]
             end)
       |> Enum.concat()
@@ -413,16 +414,15 @@ defmodule TrieTestsTest do
     r =
       ["p", "pe"]
       |> Enum.map(fn t ->
-        :btrie.fold_similar(t, fn key, value, acc -> acc ++ [value] end, [], index)
+        :btrie.fold_similar(t, fn key, value, acc -> acc ++ [{key, value}] end, [], index)
       end)
       |> Enum.concat()
       |> List.flatten()
-      |> Enum.filter(fn {_, _, v} -> v == :fruits or v == :ranch end)
-      # |> Enum.filter(fn {_, [{_, _, type}} -> type == :contact end)
+      |> Enum.filter(fn {k, [{_, _, v}]} -> v == :fruits or v == :ranch end)
       # |> compute_score()
-      |> Enum.map(fn {id, b, v} -> %{id: id, boosting: 1 * b, type: v} end)
+      |> Enum.map(fn {k, [{id, b, v}]} -> %{id: id, boosting: 1 * b, type: v} end)
 
-    assert r ==  [%{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 4, type: :fruits}, %{boosting: 1, id: 2, type: :fruits}, %{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 8, type: :ranch}, %{boosting: 100, id: 8, type: :ranch}, %{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 4, type: :fruits}, %{boosting: 1, id: 2, type: :fruits}, %{boosting: 1, id: 3, type: :fruits}]
+    assert r ==  [%{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 4, type: :fruits}, %{boosting: 1, id: 2, type: :fruits}, %{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 8, type: :ranch}, %{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, type: :fruits, id: 4}, %{boosting: 1, type: :fruits, id: 2}, %{boosting: 1, type: :fruits, id: 3}]
   end
 
   def compute_score(index_items) do
