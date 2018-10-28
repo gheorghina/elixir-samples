@@ -396,14 +396,19 @@ defmodule TrieTestsTest do
       |> Enum.filter(fn {term, {_, _, _}} -> term != "" end)
       |> :btrie.new()
 
-    ranch_array =
+    index =
       obj_list2
       |> Map.values()
       |> Enum.map(fn %{id: id, name: name} ->
-              [{name, {id, 1, :ranch}}, {name <> "_test", {id, 1, :ranch}}] end)
-      |> Enum.flat_map(fn v -> v end)
-
-    index = compute_index(ranch_array , index)
+               [
+                 {name, [{id, 1, :ranch}, {id, 100, :ranch}]},
+                 {name <> "_test", [{id, 1, :ranch}, {id, 100, :ranch}]}
+               ]
+            end)
+      |> Enum.concat()
+      |> Enum.reduce(fn {name, values}, idx_acc ->
+                        idx_acc = :btrie.append_list(name |> String.downcase(), values, index)
+                      end)
 
     r =
       ["p", "pe"]
@@ -411,15 +416,21 @@ defmodule TrieTestsTest do
         :btrie.fold_similar(t, fn key, value, acc -> acc ++ [value] end, [], index)
       end)
       |> Enum.concat()
-      |> Enum.at(0)
-      |> Enum.filter(fn {_, _, v} -> v == :fruits end)
+      |> List.flatten()
+      |> Enum.filter(fn {_, _, v} -> v == :fruits or v == :ranch end)
+      # |> Enum.filter(fn {_, [{_, _, type}} -> type == :contact end)
+      # |> compute_score()
       |> Enum.map(fn {id, b, v} -> %{id: id, boosting: 1 * b, type: v} end)
 
-    assert r ==  [%{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, type: :fruits, id: 4}, %{boosting: 1, id: 2, type: :fruits}, %{boosting: 1, id: 3, type: :fruits}]
+    assert r ==  [%{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 4, type: :fruits}, %{boosting: 1, id: 2, type: :fruits}, %{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 8, type: :ranch}, %{boosting: 100, id: 8, type: :ranch}, %{boosting: 1, id: 3, type: :fruits}, %{boosting: 1, id: 4, type: :fruits}, %{boosting: 1, id: 2, type: :fruits}, %{boosting: 1, id: 3, type: :fruits}]
+  end
+
+  def compute_score(index_items) do
+    index_items
+    |> Enum.reduce(%{}, fn {_, {id, boosting, _}}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
   end
 
   defp append_to_search_index(index, {term, _}) when term == "", do: index
-
   defp append_to_search_index(index, {term, value}) when term != "",
     do: :btrie.append(term |> String.downcase(), value, index)
 
