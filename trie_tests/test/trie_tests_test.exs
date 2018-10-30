@@ -324,6 +324,47 @@ defmodule TrieTestsTest do
     assert r == [%{id: 1, score: 1}, %{id: 3, score: 1.1}]
   end
 
+  test "erase from btrie" do
+    obj_list1 =
+      Map.new([
+        {1, %{id: 1, name: "apple"}},
+        {2, %{id: 2, name: "pear"}},
+        {3, %{id: 3, name: "peach"}}
+      ])
+
+    index =
+      obj_list1
+      |> Map.values()
+      |> Enum.map(fn %{id: id, name: name} ->
+        [{name, {id, 1, :fruits}}, {name <> "_test", {id, 1, :fruits}}]
+      end)
+      |> Enum.flat_map(fn v -> v end)
+      |> Enum.filter(fn {term, {_, _, _}} -> term != "" end)
+      |> :btrie.new()
+
+      index =
+            obj_list1
+            |> Map.values()
+            |> Enum.map(fn %{id: id, name: name} ->
+                  [{name <> "_test", {id, 1, :fruits}}]
+                end)
+            |> List.flatten()
+            |> Enum.reduce(index, fn {k, v}, acc_index ->
+                    :btrie.erase(k, acc_index)
+                  end)
+
+      r =
+        ["p"]
+        |> Enum.map(fn t ->
+          :btrie.fold_similar(t, fn key, value, acc -> acc ++ [{key, value}] end, [], index)
+        end)
+        |> Enum.at(0)
+        |> Enum.filter(fn {_, {_, _, v}} -> v == :fruits end)
+        |> Enum.map(fn {term, {id, b, v}} -> %{term: term, id: id, boosting: 1 * b, type: v} end)
+
+      assert r == [%{boosting: 1, id: 3, term: "peach", type: :fruits}, %{boosting: 1, id: 2, term: "pear", type: :fruits}]
+  end
+
   test "btrie - build different" do
     obj_list1 =
       Map.new([
@@ -365,68 +406,86 @@ defmodule TrieTestsTest do
            ]
   end
 
-  test "try simpler" do
-    obj_list1 =
-      Map.new([
-        {1, %{id: 1, name: "apple"}},
-        {2, %{id: 2, name: "pear"}},
-        {3, %{id: 3, name: "peach"}},
-        {4, %{id: 4, name: "blossom"}},
-        {5, %{id: 5, name: "ananas"}}
-      ])
+  # test "try simpler" do
+  #   obj_list1 =
+  #     Map.new([
+  #       {1, %{id: 1, name: "apple"}},
+  #       {2, %{id: 2, name: "pear"}},
+  #       {3, %{id: 3, name: "peach"}},
+  #       {4, %{id: 4, name: "blossom"}},
+  #       {5, %{id: 5, name: "ananas"}}
+  #     ])
 
-    obj_list2 =
-      Map.new([
-        {6, %{id: 6, name: "cowboy"}},
-        {7, %{id: 7, name: "horse"}},
-        {8, %{id: 8, name: "pheep"}}
-      ])
+  #   obj_list2 =
+  #     Map.new([
+  #       {6, %{id: 6, name: "cowboy"}},
+  #       {7, %{id: 7, name: "horse"}},
+  #       {8, %{id: 8, name: "pheep"}}
+  #     ])
 
-    index =
-      obj_list1
-      |> Map.values()
-      |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
-            map =
-              map
-              |> Map.merge( %{name => [{id, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end)
-              |> Map.merge( %{name <> "_new" => [{id + 1, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end )
-              |> Map.merge( %{"bb" => [{id, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end)
-              |> Map.merge( %{"" => [{id, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end)
-            end)
-      |> Enum.map(fn {k,v} -> {k, v} end)
-      |> Enum.filter(fn {term, _} -> term != "" end)
-      |> :btrie.new()
+  #   index =
+  #     (obj_list1
+  #     |> Map.values()
+  #     |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
+  #           map =
+  #             map
+  #             |> Map.merge( %{name => [{id, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end)
+  #             |> Map.merge( %{name <> "_new" => [{id + 1, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end )
+  #             |> Map.merge( %{"bb" => [{id, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end)
+  #             |> Map.merge( %{"" => [{id, 1, :fruits}]}, fn _k, v1, v2 -> [v1, v2] end)
+  #           end)
+  #     |> Enum.map(fn {k,v} -> {k, v} end)
+  #     |> Enum.filter(fn {term, _} -> term != "" end)) ++
+  #     (
+  #       obj_list2
+  #                       |> Map.values()
+  #                       |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
+  #                         map =
+  #                           map
+  #                                 |> Map.merge( %{name => [{id, 100, :ranch}]}, fn _k, v1, v2 -> [v1, v2] end)
+  #                                 |> Map.merge( %{name <> "_test" => [{id, 1, :ranch}]}, fn _k, v1, v2 -> [v1, v2] end )
+  #                                 |> Map.merge( %{name <> "_test" => [{id, 100, :dont_override}]}, fn _k, v1, v2 -> [v1, v2] end )
+  #                                 |> Map.merge( %{name <> "_test" => [{id, 100, :dont_override2}]}, fn _k, v1, v2 -> [v1, v2] end )
+  #                               end)
+  #                       |> Enum.map(fn {k, v} -> {k,v} end)
+  #     )
+  #     |> :btrie.new()
 
-    index =
-      obj_list2
-      |> Map.values()
-      |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
-              map =
-                map
-                |> Map.merge( %{name => [{id, 100, :ranch}]}, fn _k, v1, v2 -> [v1, v2] end)
-                |> Map.merge( %{name <> "_test" => [{id, 1, :ranch}]}, fn _k, v1, v2 -> [v1, v2] end )
-                |> Map.merge( %{name <> "_test" => [{id, 100, :dont_override}]}, fn _k, v1, v2 -> [v1, v2] end )
-                |> Map.merge( %{name <> "_test" => [{id, 100, :dont_override2}]}, fn _k, v1, v2 -> [v1, v2] end )
-              end)
-      |> Enum.reduce(fn {name, values}, idx_acc ->
-                         idx_acc = :btrie.append_list(name |> String.downcase(), values, index)
-                       end)
+  #     # index =
+  #     #                   obj_list2
+  #     #                   |> Map.values()
+  #     #                   |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
+  #     #                             # |> Map.merge( %{name => [{id, 100, :ranch}]}, fn _k, v1, v2 -> [v1, v2] end)
+  #     #                             map = Map.merge(map, %{name <> "_test" => [{id, 1, :ranch}]}, fn _k, v1, v2 -> [v1, v2] end )
+  #     #                             # |> Map.merge( %{name <> "_test" => [{id, 100, :dont_override}]}, fn _k, v1, v2 -> [v1, v2] end )
+  #     #                             # |> Map.merge( %{name <> "_test" => [{id, 100, :dont_override2}]}, fn _k, v1, v2 -> [v1, v2] end )
+  #     #                           end)
+  #     #                   |> Enum.map(fn {k, v} -> {k,v} end)
+  #     #                   |> Enum.reduce(fn {name, values}, idx_acc ->
+  #     #                                      idx_acc = :btrie.append_list(name |> String.downcase(), values, index)
+  #     #                                    end)
 
-    r =
-      ["p", "pe", "b"]
-      |> Enum.map(fn t ->
-        :btrie.fold_similar(t, fn key, value, acc -> acc ++ [{key, value}] end, [], index)
-      end)
-      |> Enum.concat()
-      |> Enum.map(fn {k, v} -> v end)
-      |> List.flatten()
-      # |> Enum.filter(fn {_, _, v} -> v == :fruits or v == :ranch or v == :dont_override end)
-      |> Enum.reduce(%{}, fn {id, boosting, _}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
-      |> Enum.map(fn {i, s}  -> %{id: i, score: s}
-                       end)
+  #   r =
+  #     # ["p", "pe", "b"]
+  #     ["cowboy"]
+  #     |> Enum.map(fn t ->
+  #       :btrie.fold_similar(t, fn key, value, acc -> acc ++ [{key, value}] end, [], index)
+  #     end)
+  #     |> Enum.concat()
+  #     |> Enum.map(fn {k, v} ->
+  #         score = 2
+  #         v
+  #         |> List.flatten()
+  #         |> Enum.map(fn {id, boosting, type} -> {id, boosting * score, type} end)
+  #       end)
+  #     |> List.flatten()
+  #     |> Enum.filter(fn {_, _, v} -> v != :fruits end)
+  #     |> Enum.reduce(%{}, fn {id, boosting, _}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
+  #     |> Enum.map(fn {i, s}  -> %{id: i, score: s}
+  #                      end)
 
-    assert r ==  [%{id: 1, score: 1}, %{id: 2, score: 3}, %{id: 3, score: 5}, %{id: 4, score: 4}, %{id: 5, score: 2}, %{id: 8, score: 201}]
-  end
+  #   assert r ==  [%{id: 1, score: 1}, %{id: 2, score: 3}, %{id: 3, score: 5}, %{id: 4, score: 4}, %{id: 5, score: 2}, %{id: 8, score: 201}]
+  # end
 
   def compute_score(index_items) do
     index_items
