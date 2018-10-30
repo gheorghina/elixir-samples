@@ -336,17 +336,30 @@ defmodule TrieTestsTest do
       obj_list1
       |> Map.values()
       |> Enum.map(fn %{id: id, name: name} ->
-        [{name, {id, 1, :fruits}}, {name <> "_test", {id, 1, :fruits}}]
+        [ {name, [{id, 1, :fruits}]}, {name <> "_test", [{id, 1, :fruits}]}]
       end)
-      |> Enum.flat_map(fn v -> v end)
-      |> Enum.filter(fn {term, {_, _, _}} -> term != "" end)
+      |> List.flatten()
+      |> Enum.map(fn {k, v} -> {k, v} end)
       |> :btrie.new()
 
+      #try the append_list function
+      index =
+        obj_list1
+        |> Map.values()
+        |> Enum.map(fn %{id: id, name: name} ->
+              [ {name <> "_appended", [{id, 1, :fruits}]}]
+            end)
+        |> List.flatten()
+        |> Enum.reduce(index, fn {k, v}, acc_index ->
+                :btrie.append_list(k, v, acc_index)
+              end)
+
+      # try the erase function
       index =
             obj_list1
             |> Map.values()
             |> Enum.map(fn %{id: id, name: name} ->
-                  [{name <> "_test", {id, 1, :fruits}}]
+                  [ {name <> "_test", [{id, 1, :fruits}]}]
                 end)
             |> List.flatten()
             |> Enum.reduce(index, fn {k, v}, acc_index ->
@@ -358,11 +371,13 @@ defmodule TrieTestsTest do
         |> Enum.map(fn t ->
           :btrie.fold_similar(t, fn key, value, acc -> acc ++ [{key, value}] end, [], index)
         end)
-        |> Enum.at(0)
+        |> Enum.concat()
+        |> List.flatten()
+        |> Enum.map(fn {k, v} -> {k, v |> Enum.at(0)} end)
         |> Enum.filter(fn {_, {_, _, v}} -> v == :fruits end)
-        |> Enum.map(fn {term, {id, b, v}} -> %{term: term, id: id, boosting: 1 * b, type: v} end)
+        |> Enum.map(fn {k, {id, b, v}} -> %{k: k, id: id, boosting: 1 * b, type: v} end)
 
-      assert r == [%{boosting: 1, id: 3, term: "peach", type: :fruits}, %{boosting: 1, id: 2, term: "pear", type: :fruits}]
+      assert r == [%{boosting: 1, id: 3, type: :fruits, k: "peach"}, %{boosting: 1, type: :fruits, id: 3, k: "peach_appended"}, %{boosting: 1, id: 2, k: "pear", type: :fruits}, %{boosting: 1, id: 2, k: "pear_appended", type: :fruits}]
   end
 
   test "btrie - build different" do
