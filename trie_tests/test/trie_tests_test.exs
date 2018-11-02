@@ -475,34 +475,37 @@ defmodule TrieTestsTest do
     r =
       ["p", "pe", "b", "cowboy"]
       |> Enum.map(fn t ->
-        :btrie.fold_similar(t, fn key, value, acc -> acc ++ [{key, value}] end, [], index)
+        :btrie.fold_similar(t, fn key, value, acc ->
+            f_v = value
+                |> cmp_score()
+                |> Enum.filter(fn {_, _, v} -> v == :fruits or v == :ranch end)
+                |> Enum.reduce(%{}, fn {id, boosting, type}, map -> Map.update(map, {id, type}, boosting, &(&1 + boosting))  end)
+
+          acc ++ [f_v] end, [], index)
       end)
-      |> Enum.concat()
-      |> Enum.map(fn {k, v} -> cmp_score(v) end)
-      |> Enum.filter(fn {_, _, v} -> v != :fruits end)
-      |> Enum.reduce(%{}, fn {id, boosting, _}, map -> Map.update(map, id, boosting, &(&1 + boosting))  end)
-      |> Enum.map(fn {i, s} -> %{id: i, score: s} end)
+      |> List.flatten()
+      #[%{}, %{}, %{}, %{}, %{{8, :ranch} => 200}, %{{8, :ranch} => 2}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{{6, :ranch} => 200}, %{{6, :ranch} => 2}]
+      |> Enum.reduce( fn k, v -> Map.merge(k, v, fn _k, v1, v2 -> v1 + v2 end) end)
+      #%{{6, :ranch} => 202, {8, :ranch} => 202}
+      |> Enum.group_by(fn {{_, type}, _} -> type end)
 
-      # {3, 2, :fruits}, {4, 2, :fruits}, {2, 2, :fruits}, {3, 2, :fruits}, {8, 200, :ranch}, {8, 2, :ranch}, {3, 2, :fruits}, {4, 2, :fruits}, {2, 2, :fruits}, {3, 2, :fruits}, {1, 2, :fruits}, {4, 2, :fruits}, {5, 2, :fruits}]
-
-      # [
-      # {"peach", {3, 1, :fruits}},
-      # {"peach_new", {4, 1, :fruits}}, {"pear", {2, 1, :fruits}}, {"pear_new", {3, 1, :fruits}}, {"pheep", {8, 100, :ranch}},
-      # {"pheep_test", [{8, 100, :dont_override2}, {8, 100, :dont_override} | {8, 1, :ranch}]}, {"peach", {3, 1, :fruits}},
-      # {"peach_new", {4, 1, :fruits}}, {"pear", {2, 1, :fruits}}, {"pear_new", {3, 1, :fruits}},
-      # {"bb", [{5, 1, :fruits}, {4, 1, :fruits}, {3, 1, :fruits}, {2, 1, :fruits} | {1, 1, :fruits}]},
-      # {"blossom", {4, 1, :fruits}},
-      # {"blossom_new", {5, 1, :fruits}}]
-
-
-    assert r ==  [%{id: 6, score: 202}, %{id: 8, score: 202}]
-    # assert index  == []
-    # assert r ==  [%{id: 1, score: 1}, %{id: 2, score: 3}, %{id: 3, score: 5}, %{id: 4, score: 4}, %{id: 5, score: 2}, %{id: 8, score: 201}]
+    assert r ==  %{
+      fruits: [
+        {{1, :fruits}, 2},
+        {{2, :fruits}, 4},
+        {{3, :fruits}, 8},
+        {{4, :fruits}, 6},
+        {{5, :fruits}, 2}
+      ],
+      ranch: [{{6, :ranch}, 202}, {{8, :ranch}, 202}]
+    }
   end
 
-  defp cmp_score([]), do:  []
-  defp cmp_score([head|tail]), do: cmp_score(tail)
-  defp cmp_score({id, boosting, type}), do: {id, boosting * 2, type}
+  defp cmp_score(v, acc \\ [])
+  defp cmp_score([], acc), do:  acc
+  defp cmp_score([head|tail], acc), do: cmp_score(tail, acc)
+  defp cmp_score({id, boosting, type}, acc), do: acc ++ [{id, boosting * 2 , type}]
+
 
   def compute_score(index_items) do
     index_items
@@ -527,17 +530,6 @@ defmodule TrieTestsTest do
   def compute_index([], index_acc) do
     index_acc
   end
-
-  # defp compute_score do
-  #   [%{id: 1, val: 12}, %{id: 3, val: 7}, %{id: 1, val: 5}, %{id: 2, val: 3}, %{id: 2, val: 5}, %{id: 1, val: 3}]
-  #   |> Enum.reduce(%{}, fn %{id: id, val: val}, map -> Map.update(map, id, val, &(&1 + val)) end)
-
-  #   [{"e", {1, 1, :fruits}}, {"b", {2, 1, :fruits}}, {"b", {2, 0.1, :fruits}}]
-
-  #   index_items
-  #   |> Enum.reduce(%{}, fn {_, {id, boosting, _}}, map -> Map.update(map, id, boosting, &(&1 + boosting)) end)
-
-  # end
 
   defp get_a_btrie_idx() do
     obj_list1 =
