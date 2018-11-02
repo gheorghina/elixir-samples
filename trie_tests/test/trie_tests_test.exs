@@ -452,47 +452,57 @@ defmodule TrieTestsTest do
       ((obj_list1
         |> Map.values()
         |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
-          map =
             map
-            |> Map.merge(%{name => [{id, 1, :fruits}]}, fn _k, v1, v2 -> Enum.concat(v1, v2) end)
-            |> Map.merge(%{(name <> "_new") => [{id + 1, 1, :fruits}]}, fn _k, v1, v2 -> Enum.concat(v1, v2) end)
-            |> Map.merge(%{"bb" => [{id, 1, :fruits}]}, fn _k, v1, v2 -> Enum.concat(v1, v2) end)
-            |> Map.merge(%{"" => [{id, 1, :fruits}]}, fn _k, v1, v2 -> Enum.concat(v1, v2) end)
+            |> Map.update(name, {id, 1, :fruits}, fn ids -> [{id, 1, :fruits} | ids ] end)
+            |> Map.update((name <> "_new"), {id + 1, 1, :fruits}, fn ids -> [ {id + 1, 1, :fruits}] end)
+            |> Map.update("bb", {id, 1, :fruits}, fn ids -> [{id, 1, :fruits} | ids ] end)
+            |> Map.update("",  {id, 1, :fruits}, fn ids -> [{id, 1, :fruits} | ids ] end)
         end)
         |> Map.to_list()
         |> Enum.filter(fn {term, _} -> term != "" end)) ++
          (obj_list2
           |> Map.values()
           |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
-            map =
               map
-              |> Map.merge(%{name => [{id, 100, :ranch}]}, fn _k, v1, v2 -> Enum.concat(v1, v2) end)
-              |> Map.merge(%{(name <> "_test") => [{id, 1, :ranch}]}, fn _k, v1, v2 -> Enum.concat(v1, v2) end)
-              |> Map.merge(%{(name <> "_test") => [{id, 100, :dont_override}]}, fn _k, v1, v2 -> Enum.concat(v1, v2) end)
-              |> Map.merge(%{(name <> "_test") => [{id, 100, :dont_override2}]}, fn _k, v1, v2 -> Enum.concat(v1, v2) end)
+              |> Map.update(name, {id, 100, :ranch}, fn ids -> [{id, 100, :ranch} | ids ] end)
+              |> Map.update((name <> "_test"), {id, 1, :ranch}, fn ids -> [ {id, 1, :ranch} | ids ] end)
+              |> Map.update((name <> "_test"), {id, 100, :dont_override}, fn ids -> [{id, 100, :dont_override} | ids] end)
+              |> Map.update((name <> "_test"), {id, 100, :dont_override2}, fn ids -> [{id, 100, :dont_override2} | ids] end)
             end)
           |> Map.to_list()))
       |> :btrie.new()
 
     r =
-      ["p", "pe", "b"]
+      ["p", "pe", "b", "cowboy"]
       |> Enum.map(fn t ->
         :btrie.fold_similar(t, fn key, value, acc -> acc ++ [{key, value}] end, [], index)
       end)
       |> Enum.concat()
-      |> Enum.map(fn {k, v} -> score = 2
-        v
-        |> List.flatten()
-        |> Enum.map(fn {id, boosting, type} -> {id, boosting * score, type} end) end)
-      |> List.flatten()
+      |> Enum.map(fn {k, v} -> cmp_score(v) end)
       |> Enum.filter(fn {_, _, v} -> v != :fruits end)
       |> Enum.reduce(%{}, fn {id, boosting, _}, map -> Map.update(map, id, boosting, &(&1 + boosting))  end)
       |> Enum.map(fn {i, s} -> %{id: i, score: s} end)
 
-    assert r == [%{id: 8, score: 602}]
+      # {3, 2, :fruits}, {4, 2, :fruits}, {2, 2, :fruits}, {3, 2, :fruits}, {8, 200, :ranch}, {8, 2, :ranch}, {3, 2, :fruits}, {4, 2, :fruits}, {2, 2, :fruits}, {3, 2, :fruits}, {1, 2, :fruits}, {4, 2, :fruits}, {5, 2, :fruits}]
+
+      # [
+      # {"peach", {3, 1, :fruits}},
+      # {"peach_new", {4, 1, :fruits}}, {"pear", {2, 1, :fruits}}, {"pear_new", {3, 1, :fruits}}, {"pheep", {8, 100, :ranch}},
+      # {"pheep_test", [{8, 100, :dont_override2}, {8, 100, :dont_override} | {8, 1, :ranch}]}, {"peach", {3, 1, :fruits}},
+      # {"peach_new", {4, 1, :fruits}}, {"pear", {2, 1, :fruits}}, {"pear_new", {3, 1, :fruits}},
+      # {"bb", [{5, 1, :fruits}, {4, 1, :fruits}, {3, 1, :fruits}, {2, 1, :fruits} | {1, 1, :fruits}]},
+      # {"blossom", {4, 1, :fruits}},
+      # {"blossom_new", {5, 1, :fruits}}]
+
+
+    assert r ==  [%{id: 6, score: 202}, %{id: 8, score: 202}]
     # assert index  == []
     # assert r ==  [%{id: 1, score: 1}, %{id: 2, score: 3}, %{id: 3, score: 5}, %{id: 4, score: 4}, %{id: 5, score: 2}, %{id: 8, score: 201}]
   end
+
+  defp cmp_score([]), do:  []
+  defp cmp_score([head|tail]), do: cmp_score(tail)
+  defp cmp_score({id, boosting, type}), do: {id, boosting * 2, type}
 
   def compute_score(index_items) do
     index_items
@@ -625,23 +635,23 @@ defmodule TrieTestsTest do
 
       IO.puts("have the merged list with [v1, v2] #{Time.utc_now }")
 
-    concat_result =
-        list
-        |> Map.values()
-        |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
-          map =
-            map
-            |> Map.merge(%{name => [{id, 5, :ranch}]}, fn _k, v1, v2 -> Enum.concat(v1, v2) end)
-          end)
-        |> Map.to_list()
+    # concat_result =
+    #     list
+    #     |> Map.values()
+    #     |> Enum.reduce(%{}, fn %{id: id, name: name}, map ->
+    #       map =
+    #         map
+    #         |> Map.merge(%{name => [{id, 5, :ranch}]}, fn _k, v1, v2 -> Enum.concat(v1, v2) end)
+    #       end)
+    #     |> Map.to_list()
 
-    IO.puts("have the merged list with Enum.concat #{Time.utc_now }")
+    # IO.puts("have the merged list with Enum.concat #{Time.utc_now }")
 
     update_result =
       list
       |> Map.values()
       |> Enum.reduce(%{}, fn %{id: id, name: name}, acc ->
-        acc |> Map.update(id, %{name => [{id, 5, :ranch}]}, fn ids -> [%{name => [{id, 5, :ranch}]} | ids] end)
+        acc |> Map.update(id, %{name => [{id, 5, :ranch}]}, fn ids -> [ ids | %{name => [{id, 5, :ranch}]} ] end)
       end)
 
   IO.puts("have the merged list with Map.update [v1 | v2] #{Time.utc_now }")
