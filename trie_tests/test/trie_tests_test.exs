@@ -112,6 +112,34 @@ defmodule TrieTestsTest do
     assert rn0 == []
   end
 
+  test "trie crash tst" do
+
+   t =  :trie.new([
+      {'*',      1},
+      {'aa*',    2},
+      {'aa*b',   3},
+      {'aa*a*',  4},
+      {'aaaaa',  5}])
+
+    r1 = :trie.fold_match('aaaa', RootNode6)
+    r2 = :trie.find_match('aaaaa', RootNode6)
+    r3 = :trie.find_match('aa', RootNode6)
+    r4 = :trie.find_match('aab', RootNode6)
+
+    assert r1 == r2 == r3 == r4 == ""
+
+
+    tn =
+      :trie.new([{'abcdefghijklmnopqrstuvwxyz', [{"eIxwocDq96uYG1A-Y7qek_BP7gy5ROAA4mAxio7A2Pk", 0, 1, :forum}, {"eIxwocDq96uYG1A-Y7qek_BP7gy5ROAA4mAxio7A2Pk", 5, 1, :forum}] },
+      {'ammmmmmm', {"eIxwocDq96uYG1A-Y7qek_BP7gy5ROAA4mAxio7A2Pk", 5, 1, :forum}}
+      # {"eIxwocDq96uYG1A-Y7qek_BP7gy5ROAA4mAxio7A2Pk", 6, 1, :forum},
+      # {"9XqiLVC1sEA9WlInxbujyTP3Hqlt3OyK1SJCQQrif1Q", 0, 1, :forum}
+      ])
+
+    assert tn == {97, 97, {{{98, 109, {{'cdefghijklmnopqrstuvwxyz', [{"eIxwocDq96uYG1A-Y7qek_BP7gy5ROAA4mAxio7A2Pk", 0, 1, :forum}, {"eIxwocDq96uYG1A-Y7qek_BP7gy5ROAA4mAxio7A2Pk", 5, 1, :forum}]}, {[], :error}, {[], :error}, {[],:error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {[], :error}, {'mmmmmm', {"eIxwocDq96uYG1A-Y7qek_BP7gy5ROAA4mAxio7A2Pk", 5, 1, :forum}}}}, :error}}}
+
+  end
+
   test "trie tests" do
     tn0 =
       :trie.new([
