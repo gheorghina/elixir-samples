@@ -15,7 +15,7 @@ defmodule MarkdownTest do
     assert Markdown.parse(input) == expected
   end
 
-  @tag :pending
+  # @tag :pending
   test "parsing italics" do
     input = "_This will be italic_"
     expected = "<p><em>This will be italic</em></p>"
