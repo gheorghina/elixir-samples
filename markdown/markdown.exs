@@ -18,24 +18,35 @@ defmodule Markdown do
   @em_pattern ~r/_/
   @strong_pattern ~r/#{"__"}{1}/
 
+  require Logger
+
   @spec parse(String.t()) :: String.t()
   def parse(m) do
     process(m)
   end
 
   defp process(t) do
+    words =
+            t
+            |> String.split()
+            |> replace_prefix()
+            |> replace_suffix()
 
-    t
-    |> String.split(@space)
-    |> replace_prefix()
-    |> replace_suffix()
-    |> Enum.join(@space)
-    |> enclose_with_paragraph_tag()
-
+    cond do
+      t |> String.starts_with?("#") -> words |> enclose_with_header_tag()
+      true -> words |> enclose_with_paragraph_tag()
+    end
   end
 
-  defp enclose_with_paragraph_tag(t) do
-      "<p>#{t}</p>"
+  defp enclose_with_header_tag([h | t]) do
+    h_no = h |> String.length()
+    text = t |> Enum.join(@space)
+
+    "<h#{h_no}>#{text}</h#{h_no}>"
+  end
+
+  defp enclose_with_paragraph_tag(words) do
+      "<p>#{words |> Enum.join(@space)}</p>"
   end
 
   defp replace_prefix(words) when is_list(words) do
@@ -71,11 +82,6 @@ defmodule Markdown do
   end
 
 
-  # defp parse_header_md_level(hwt) do
-  #   [h | t] = String.split(hwt)
-  #   {to_string(String.length(h)), Enum.join(t, " ")}
-  # end
-
   # defp parse_list_md_level(l) do
 
   #   l
@@ -91,39 +97,6 @@ defmodule Markdown do
   #   # |> String.split(~r/\s/)
   #   # |> replace_md_with_tag()
 
-  # end
-
-  # defp enclose_with_header_tag({hl, htl}) do
-  #   "<h" <> hl <> ">" <> htl <> "</h" <> hl <> ">"
-  # end
-
-
-
-  # defp join_words_with_tags(t) do
-  #   Enum.join(Enum.map(t, fn w -> replace_md_with_tag(w) end), " ")
-  # end
-
-  # defp replace_md_with_tag(w) do
-  #   w
-  #   |> replace_prefix_md()
-  #   |> replace_suffix_md()
-
-  # end
-
-  # defp replace_prefix_md(w) do
-  #   cond do
-  #     w =~ ~r/^#{"__"}{1}/ -> String.replace(w, ~r/^#{"__"}{1}/, "<strong>", global: false)
-  #     w =~ ~r/^[#{"_"}{1}][^#{"_"}+]/ -> String.replace(w, ~r/_/, "<em>", global: false)
-  #     true -> w
-  #   end
-  # end
-
-  # defp replace_suffix_md(w) do
-  #   cond do
-  #     w =~ ~r/#{"__"}{1}$/ -> String.replace(w, ~r/#{"__"}{1}$/, "</strong>")
-  #     w =~ ~r/[^#{"_"}{1}]/ -> String.replace(w, ~r/_/, "</em>")
-  #     true -> w
-  #   end
   # end
 
   # defp patch(l) do
