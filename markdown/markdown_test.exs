@@ -57,14 +57,14 @@ defmodule MarkdownTest do
     assert Markdown.parse(input) == expected
   end
 
-  @tag :pending
+  # @tag :pending
   test "unordered lists" do
     input = "* Item 1\n* Item 2"
     expected = "<ul><li>Item 1</li><li>Item 2</li></ul>"
     assert Markdown.parse(input) == expected
   end
 
-  @tag :pending
+  # @tag :pending
   test "with a little bit of everything" do
     input = "# Header!\n* __Bold Item__\n* _Italic Item_"
 
