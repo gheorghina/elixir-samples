@@ -22,37 +22,42 @@ defmodule Markdown do
 
   @spec parse(String.t()) :: String.t()
   def parse(m) do
-
-    # m
-    # |> String.split("\n")
-    # |> Enum.map(fn line -> line |> process() end)
-    # |> Enum.join()
-
     m |> process()
   end
 
   defp process(t) do
-    words =
-            t
-            |> String.split()
-            |> replace_prefix()
-            |> replace_suffix()
-
     cond do
-      t |> String.starts_with?("#") -> words |> enclose_with_header_tag()
-      t |> String.starts_with?("*") -> words |> enclose_with_lists_tag()
-      true -> words |> enclose_with_tag("p", @space)
+      t |> String.starts_with?("#") and t |> String.contains?("*") -> t |> String.split("\n") |> process_all()
+      t |> String.starts_with?("#") -> t |>  adjust_internals() |> enclose_with_header_tag()
+      t |> String.starts_with?("*") -> t |>  adjust_internals() |> enclose_with_lists_tag()
+      true -> t |>  adjust_internals() |> enclose_with_tag("p", @space)
     end
   end
 
-  defp enclose_with_lists_tag([h | t]) do
-    text = t |> Enum.join(@space)
+  defp adjust_internals(t) do
+      t
+      |> String.split()
+      |> replace_prefix()
+      |> replace_suffix()
+  end
 
-    text =
-      text
-      |> String.split("*")
-      |> Enum.map(fn w -> "<li>#{w |> String.trim()}</li>" end)
-      |> enclose_with_tag("ul")
+  defp process_all([h | t]) do
+   h_p = h |> process()
+
+   t_p =
+    t
+    |> Enum.join(@space)
+    |> process()
+
+   h_p <> t_p
+  end
+
+  defp enclose_with_lists_tag([_ | t]) do
+    t
+    |> Enum.join(@space)
+    |> String.split("*")
+    |> Enum.map(fn w -> "<li>#{w |> String.trim()}</li>" end)
+    |> enclose_with_tag("ul")
   end
 
   defp enclose_with_header_tag([h | t]) do
