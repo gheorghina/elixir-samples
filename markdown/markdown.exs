@@ -12,7 +12,9 @@ defmodule Markdown do
   """
   @space " "
   @em_ "_"
-  @strong_ "__"
+  @strong__ "__"
+  @em_tag "em"
+  @strong_tag "strong"
   @em_pattern ~r/_/
   @strong_pattern ~r/#{"__"}{1}/
 
@@ -40,8 +42,8 @@ defmodule Markdown do
     words
     |> Enum.map(fn w ->
         w
-        |> replace_prefix_md(@strong_, @strong_pattern, "strong")
-        |> replace_prefix_md(@em_, @em_pattern, "em")
+        |> replace_prefix_md(@strong__, @strong_pattern, @strong_tag)
+        |> replace_prefix_md(@em_, @em_pattern, @em_tag)
     end)
   end
 
@@ -49,8 +51,8 @@ defmodule Markdown do
     words
     |> Enum.map(fn w ->
         w
-        |> replace_suffix_md(@strong_, @strong_pattern, "strong")
-        |> replace_suffix_md(@em_, @em_pattern, "em")
+        |> replace_suffix_md(@strong__, @strong_pattern, @strong_tag)
+        |> replace_suffix_md(@em_, @em_pattern, @em_tag)
     end)
   end
 
