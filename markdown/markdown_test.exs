@@ -22,14 +22,14 @@ defmodule MarkdownTest do
     assert Markdown.parse(input) == expected
   end
 
-  @tag :pending
+  #  @tag :pending
   test "parsing bold text" do
     input = "__This will be bold__"
     expected = "<p><strong>This will be bold</strong></p>"
     assert Markdown.parse(input) == expected
   end
 
-  @tag :pending
+  # @tag :pending
   test "mixed normal, italics and bold text" do
     input = "This will _be_ __mixed__"
     expected = "<p>This will <em>be</em> <strong>mixed</strong></p>"
