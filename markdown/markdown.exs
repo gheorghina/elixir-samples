@@ -21,50 +21,50 @@ defmodule Markdown do
   require Logger
 
   @spec parse(String.t()) :: String.t()
-  def parse(m) do
-    m |> process()
+  def parse(text) do
+    text |> process()
   end
 
-  defp process(t) do
+  defp process(text) do
     cond do
-      t |> String.starts_with?("#") and t |> String.contains?("*") -> t |> String.split("\n") |> process_all()
-      t |> String.starts_with?("#") -> t |>  adjust_internals() |> enclose_with_header_tag()
-      t |> String.starts_with?("*") -> t |>  adjust_internals() |> enclose_with_lists_tag()
-      true -> t |>  adjust_internals() |> enclose_with_tag("p", @space)
+      text |> String.starts_with?("#") and text |> String.contains?("*") -> text |> String.split("\n") |> process_all()
+      text |> String.starts_with?("#") -> text |>  adjust_internals() |> enclose_with_header_tag()
+      text |> String.starts_with?("*") -> text |>  adjust_internals() |> enclose_with_lists_tag()
+      true -> text |>  adjust_internals() |> enclose_with_tag("p", @space)
     end
   end
 
-  defp adjust_internals(t) do
-      t
+  defp adjust_internals(text) do
+    text
       |> String.split()
       |> replace_prefix()
       |> replace_suffix()
   end
 
-  defp process_all([h | t]) do
-   h_p = h |> process()
+  defp process_all([first_line | the_rest_of_the_text]) do
+    first_line = first_line |> process()
 
-   t_p =
-    t
-    |> Enum.join(@space)
-    |> process()
+    the_rest_of_the_text =
+      the_rest_of_the_text
+      |> Enum.join(@space)
+      |> process()
 
-   h_p <> t_p
+    first_line <> the_rest_of_the_text
   end
 
-  defp enclose_with_lists_tag([_ | t]) do
-    t
+  defp enclose_with_lists_tag([_ | words]) do
+    words
     |> Enum.join(@space)
     |> String.split("*")
     |> Enum.map(fn w -> "<li>#{w |> String.trim()}</li>" end)
     |> enclose_with_tag("ul")
   end
 
-  defp enclose_with_header_tag([h | t]) do
-    h_no = h |> String.length()
+  defp enclose_with_header_tag([hashes | words]) do
+    h_tag_number = hashes |> String.length()
 
-    t
-    |> enclose_with_tag("h#{h_no}", @space)
+    words
+    |> enclose_with_tag("h#{h_tag_number}", @space)
   end
 
   defp enclose_with_tag(words, tag, w_join \\"") do
