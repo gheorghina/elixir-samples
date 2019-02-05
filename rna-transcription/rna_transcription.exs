@@ -8,19 +8,18 @@ defmodule RNATranscription do
   "UGAC"
   """
 
-  @adn_arn_complements %{ g: ?C, c: ?G, t: ?A, a: ?U} 
+  @adn_arn_complements %{g: ?C, c: ?G, t: ?A, a: ?U}
 
   @spec to_rna([char]) :: [char]
   def to_rna(dna) do
-
-  dna
-    |> Enum.map( fn v ->
-        case v do
-          ?G -> @adn_arn_complements[:g]
-          ?C -> @adn_arn_complements[:c]
-          ?T -> @adn_arn_complements[:t]
-          ?A -> @adn_arn_complements[:a]
-        end  
+    dna
+    |> Enum.map(fn v ->
+      case v do
+        ?G -> @adn_arn_complements[:g]
+        ?C -> @adn_arn_complements[:c]
+        ?T -> @adn_arn_complements[:t]
+        ?A -> @adn_arn_complements[:a]
+      end
     end)
   end
 end

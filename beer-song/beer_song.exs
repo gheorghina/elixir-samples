@@ -34,7 +34,7 @@ defmodule BeerSong do
   def verse(n) do
     """
     #{n} #{@bottles}#{@of_beer_on_the_wall}, #{n} #{@bottles}#{@of_beer}
-    #{@take_one_down}#{(n - 1)} #{@bottles}#{@of_beer_on_the_wall}.
+    #{@take_one_down}#{n - 1} #{@bottles}#{@of_beer_on_the_wall}.
     """
   end
 
@@ -43,11 +43,12 @@ defmodule BeerSong do
   """
   @spec lyrics(Range.t()) :: String.t()
   def lyrics(range \\ 99..0) do
-   for n <- range do lyrics(n, "") end
+    for n <- range do
+      lyrics(n, "")
+    end
     |> to_string()
   end
 
   defp lyrics(n, acc) when n == 0, do: acc <> verse(n)
   defp lyrics(n, acc) when n > 0, do: acc <> verse(n) <> "\n"
-
 end

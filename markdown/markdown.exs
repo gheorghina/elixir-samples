@@ -27,18 +27,25 @@ defmodule Markdown do
 
   defp process(text) do
     cond do
-      text |> String.starts_with?("#") and text |> String.contains?("*") -> text |> String.split("\n") |> process_all()
-      text |> String.starts_with?("#") -> text |>  adjust_internals() |> enclose_with_header_tag()
-      text |> String.starts_with?("*") -> text |>  adjust_internals() |> enclose_with_lists_tag()
-      true -> text |>  adjust_internals() |> enclose_with_tag("p", @space)
+      text |> String.starts_with?("#") and text |> String.contains?("*") ->
+        text |> String.split("\n") |> process_all()
+
+      text |> String.starts_with?("#") ->
+        text |> adjust_internals() |> enclose_with_header_tag()
+
+      text |> String.starts_with?("*") ->
+        text |> adjust_internals() |> enclose_with_lists_tag()
+
+      true ->
+        text |> adjust_internals() |> enclose_with_tag("p", @space)
     end
   end
 
   defp adjust_internals(text) do
     text
-      |> String.split()
-      |> replace_prefix()
-      |> replace_suffix()
+    |> String.split()
+    |> replace_prefix()
+    |> replace_suffix()
   end
 
   defp process_all([first_line | the_rest_of_the_text]) do
@@ -67,32 +74,35 @@ defmodule Markdown do
     |> enclose_with_tag("h#{h_tag_number}", @space)
   end
 
-  defp enclose_with_tag(words, tag, w_join \\"") do
+  defp enclose_with_tag(words, tag, w_join \\ "") do
     "<#{tag}>#{words |> Enum.join(w_join)}</#{tag}>"
-end
+  end
 
   defp replace_prefix(words) when is_list(words) do
     words
     |> Enum.map(fn w ->
-        w
-        |> replace_prefix_md(@strong__, @strong_pattern, @strong_tag)
-        |> replace_prefix_md(@em_, @em_pattern, @em_tag)
+      w
+      |> replace_prefix_md(@strong__, @strong_pattern, @strong_tag)
+      |> replace_prefix_md(@em_, @em_pattern, @em_tag)
     end)
   end
 
   defp replace_suffix(words) when is_list(words) do
     words
     |> Enum.map(fn w ->
-        w
-        |> replace_suffix_md(@strong__, @strong_pattern, @strong_tag)
-        |> replace_suffix_md(@em_, @em_pattern, @em_tag)
+      w
+      |> replace_suffix_md(@strong__, @strong_pattern, @strong_tag)
+      |> replace_suffix_md(@em_, @em_pattern, @em_tag)
     end)
   end
 
   defp replace_prefix_md(word, condition, replace_pattern, tag) do
     cond do
-      word |> String.starts_with?(condition) -> word |> String.replace(replace_pattern, "<#{tag}>", global: false)
-      true -> word
+      word |> String.starts_with?(condition) ->
+        word |> String.replace(replace_pattern, "<#{tag}>", global: false)
+
+      true ->
+        word
     end
   end
 

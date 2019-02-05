@@ -17,18 +17,14 @@ defmodule NucleotideCount do
     if is_empty(strand) do
       0
     else
-      count((to_charlist strand), nucleotide, 0)
+      count(to_charlist(strand), nucleotide, 0)
     end
-
   end
 
   defp count([head | tail], nucleotide, counter) do
     cond do
-
       head == nucleotide -> count(tail, nucleotide, 1 + counter)
-
       true -> count(tail, nucleotide, counter)
-
     end
   end
 
@@ -56,7 +52,7 @@ defmodule NucleotideCount do
 
   @spec histogram([char]) :: map
   def histogram(strand) do
-      countall((to_charlist strand), %{?A => 0, ?T => 0, ?C => 0, ?G => 0})
+    countall(to_charlist(strand), %{?A => 0, ?T => 0, ?C => 0, ?G => 0})
   end
 
   defp countall([], counter) do
@@ -64,15 +60,14 @@ defmodule NucleotideCount do
   end
 
   defp countall([head | tail], counter) do
+    value =
+      counter
+      |> Map.get(head)
 
-      value = counter
-              |> Map.get(head)
+    counter =
+      counter
+      |> Map.merge(%{head => 1 + value})
 
-      counter = counter
-                |> Map.merge(%{ head => ( 1 + value ) })
-
-      countall(tail, counter)
-
+    countall(tail, counter)
   end
-
 end

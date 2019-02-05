@@ -7,11 +7,11 @@ defmodule ListOps do
   # automatically imported) and so shouldn't be used either.
 
   @spec count(list) :: non_neg_integer
-  def count(l), do:  count(l, 0)
+  def count(l), do: count(l, 0)
 
   defp count([], counter), do: counter
 
-  defp count([_|tail], counter), do: count(tail, counter + 1)
+  defp count([_ | tail], counter), do: count(tail, counter + 1)
 
   def reverse([]), do: []
 
@@ -20,23 +20,23 @@ defmodule ListOps do
 
   defp reverse([], acc), do: acc
 
-  defp reverse([head|tail], acc), do: reverse(tail, [head | acc])
+  defp reverse([head | tail], acc), do: reverse(tail, [head | acc])
 
   @spec map(list, (any -> any)) :: list
   def map(l, f), do: reverse(map(l, f, []))
 
   defp map([], _, acc), do: acc
 
-  defp map([head|tail], f, acc), do:  map(tail, f, [f.(head) | acc])
+  defp map([head | tail], f, acc), do: map(tail, f, [f.(head) | acc])
 
   @spec filter(list, (any -> as_boolean(term))) :: list
-  def filter(l, f), do: reverse(filter(l, f,  []))
+  def filter(l, f), do: reverse(filter(l, f, []))
 
   defp filter([], _, acc), do: acc
 
-  defp filter([head| tail], f, acc) do
-   if f.(head) do
-    filter(tail, f, [head | acc])
+  defp filter([head | tail], f, acc) do
+    if f.(head) do
+      filter(tail, f, [head | acc])
     else
       filter(tail, f, acc)
     end
@@ -51,15 +51,14 @@ defmodule ListOps do
   @spec append(list, list) :: list
 
   def append(a, b) do
-
     acc =
       b
       |> reverse()
       |> append_to_acc([])
 
-      a
-      |> reverse()
-      |> append_to_acc(acc)
+    a
+    |> reverse()
+    |> append_to_acc(acc)
   end
 
   def append_to_acc([], acc), do: acc
@@ -67,6 +66,7 @@ defmodule ListOps do
 
   @spec concat([[any]]) :: [any]
   def concat([]), do: []
+
   def concat(ll) do
     ll
     |> reverse()
@@ -75,6 +75,5 @@ defmodule ListOps do
 
   defp concat([], acc), do: acc
 
-  defp concat([head|tail], acc), do: concat(tail, append_to_acc(reverse(head), acc))
-
+  defp concat([head | tail], acc), do: concat(tail, append_to_acc(reverse(head), acc))
 end
