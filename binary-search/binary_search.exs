@@ -23,20 +23,20 @@ defmodule BinarySearch do
     search_in_tuple(numbers |> Tuple.to_list(), key)
   end
 
-  defp search_in_tuple(numbers, key) do
+  defp search_in_tuple(numbers, key, idx \\ 0) do
     list_len = numbers |> length()
     last_elem = numbers |> List.last()
 
     cond do
       (last_elem == nil) or (last_elem < key) or ((list_len == 1) and (last_elem != key)) -> @not_found
-      last_elem == key -> {:ok, list_len - 1}
+      last_elem == key -> {:ok, idx + (list_len - 1)}
       true ->
         split_len = list_len/2 |> round
         [list_1, list_2] = numbers |> Enum.chunk(split_len, split_len,[])
 
         cond do
-          list_1 |> is_in_list(key) -> list_1 |> search_in_tuple(key)
-          list_2 |> is_in_list(key) -> list_2 |> search_in_tuple(key)
+          list_1 |> is_in_list(key) -> list_1 |> search_in_tuple(key, idx)
+          list_2 |> is_in_list(key) -> list_2 |> search_in_tuple(key, idx + split_len)
         end
     end
   end
