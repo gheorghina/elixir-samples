@@ -16,31 +16,36 @@ defmodule BinarySearch do
       {:ok, 2}
 
   """
-  @not_found :not_found
-
   @spec search(tuple, integer) :: {:ok, integer} | :not_found
-  def search(numbers, key) do
-    search_in_tuple(numbers |> Tuple.to_list(), key)
+  def search(numbers, key) when is_tuple(numbers) do
+    search(numbers |> Tuple.to_list(), key)
   end
 
-  defp search_in_tuple(numbers, key, idx \\ 0) do
+  def search(numbers, key, start_index \\ 0) when is_list(numbers) do
     list_len = numbers |> length()
     last_elem = numbers |> List.last()
-    last_elem_position = idx + (list_len - 1)
 
     cond do
-      last_elem == nil -> @not_found
-      last_elem < key -> @not_found
-      list_len == 1 and last_elem != key -> @not_found
-      last_elem == key -> {:ok, last_elem_position}
-      true ->
-        split_len = list_len/2 |> round
-        [list_1, list_2] = numbers |> Enum.chunk(split_len, split_len,[])
+      last_elem == nil ->
+        :not_found
 
-        if List.last(list_1) >= key do
-          list_1 |> search_in_tuple(key, idx)
+      last_elem < key ->
+        :not_found
+
+      list_len == 1 and last_elem != key ->
+        :not_found
+
+      last_elem == key ->
+        {:ok, start_index + (list_len - 1)}
+
+      true ->
+        split_len = (list_len / 2) |> round
+        [left_list, right_list] = numbers |> Enum.chunk(split_len, split_len, [])
+
+        if List.last(left_list) >= key do
+          left_list |> search(key, start_index)
         else
-          list_2 |> search_in_tuple(key, idx + split_len)
+          right_list |> search(key, start_index + split_len)
         end
     end
   end
