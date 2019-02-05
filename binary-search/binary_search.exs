@@ -34,19 +34,11 @@ defmodule BinarySearch do
         split_len = list_len/2 |> round
         [list_1, list_2] = numbers |> Enum.chunk(split_len, split_len,[])
 
-        cond do
-          list_1 |> is_in_list(key) -> list_1 |> search_in_tuple(key, idx)
-          list_2 |> is_in_list(key) -> list_2 |> search_in_tuple(key, idx + split_len)
+        if List.last(list_1) >= key do
+          list_1 |> search_in_tuple(key, idx)
+        else
+          list_2 |> search_in_tuple(key, idx + split_len)
         end
-    end
-  end
-
-  defp is_in_list(list, key) do
-    last_elem = list |> List.last()
-    if last_elem >= key do
-      true
-    else
-      false
     end
   end
 end
