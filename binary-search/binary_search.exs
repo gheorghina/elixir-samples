@@ -17,36 +17,37 @@ defmodule BinarySearch do
 
   """
   @spec search(tuple, integer) :: {:ok, integer} | :not_found
-  def search(numbers, key) when is_tuple(numbers) do
-    search(numbers |> Tuple.to_list(), key)
-  end
-
-  def search(numbers, key, start_index \\ 0) when is_list(numbers) do
-    list_len = numbers |> length()
-    last_elem = numbers |> List.last()
+  def search(numbers, key) do
+    tuple_len = numbers |> :erlang.tuple_size()
 
     cond do
-      last_elem == nil ->
+      tuple_len == 0 ->
         :not_found
 
-      last_elem < key ->
-        :not_found
-
-      list_len == 1 and last_elem != key ->
-        :not_found
-
-      last_elem == key ->
-        {:ok, start_index + (list_len - 1)}
+      tuple_len != 0 and Kernel.elem(numbers, tuple_len - 1) < key ->
+          :not_found
 
       true ->
-        split_len = (list_len / 2) |> round
-        [left_list, right_list] = numbers |> Enum.chunk(split_len, split_len, [])
+        numbers |> search(key, 0, tuple_len - 1)
+    end
+  end
 
-        if List.last(left_list) >= key do
-          left_list |> search(key, start_index)
-        else
-          right_list |> search(key, start_index + split_len)
-        end
+  defp search(numbers, key, range_min, range_max) do
+    mid_elem_pos = ((range_min + range_max) / 2) |> round()
+    mid_elem = numbers |> Kernel.elem(mid_elem_pos)
+
+    cond do
+      range_min > range_max ->
+        :not_found
+
+      mid_elem == key ->
+        {:ok, mid_elem_pos}
+
+      mid_elem > key ->
+        numbers |> search(key, range_min, mid_elem_pos - 1)
+
+      mid_elem < key ->
+        numbers |> search(key, mid_elem_pos + 1, range_max)
     end
   end
 end
