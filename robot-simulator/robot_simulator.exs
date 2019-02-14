@@ -11,18 +11,21 @@ defmodule RobotSimulator do
 
   @spec create(direction :: atom, position :: {integer, integer}) :: any
   def create(direction \\ :north, position \\ {0, 0}) do
-
     case position |> validate_position() do
       {:ok, position} ->
         case direction |> validate_direction() do
           {:ok, direction} -> %RobotSimulator{direction: direction, position: position}
-            error -> error
+          error -> error
         end
-        error -> error
+
+      error ->
+        error
     end
   end
 
-  defp validate_position(position) when is_tuple(position) and :erlang.tuple_size(position) == 2 and  is_integer(elem(position, 0)) and is_integer(elem(position, 1)) do
+  defp validate_position(position)
+       when is_tuple(position) and :erlang.tuple_size(position) == 2 and
+              is_integer(elem(position, 0)) and is_integer(elem(position, 1)) do
     {:ok, position}
   end
 
@@ -30,8 +33,7 @@ defmodule RobotSimulator do
     {:error, "invalid position"}
   end
 
-  defp validate_direction(direction) when is_atom(direction)  do
-
+  defp validate_direction(direction) when is_atom(direction) do
     if Enum.member?(@allowed_directions, direction) do
       {:ok, direction}
     else
@@ -59,12 +61,10 @@ defmodule RobotSimulator do
   """
   @spec direction(robot :: any) :: atom
   def direction(robot) do
-
     case robot do
       %RobotSimulator{direction: direction} -> direction
       _ -> nil
     end
-
   end
 
   @doc """
@@ -72,11 +72,9 @@ defmodule RobotSimulator do
   """
   @spec position(robot :: any) :: {integer, integer}
   def position(robot) do
-
     case robot do
       %RobotSimulator{position: position} -> position
       _ -> nil
     end
-
   end
 end
