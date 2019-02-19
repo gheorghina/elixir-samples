@@ -5,46 +5,30 @@ defmodule RobotSimulator do
   Valid directions are: `:north`, `:east`, `:south`, `:west`
   """
 
+  defguard is_position_valid(position)
+            when is_tuple(position) and :erlang.tuple_size(position) == 2 and
+                   is_integer(elem(position, 0)) and is_integer(elem(position, 1))
+
+  defguard is_direction_valid(direction)
+            when is_atom(direction) and
+                   (direction == :north or direction == :south or direction == :east or
+                      direction == :west)
+
   defstruct([:direction, :position])
   @type t :: %RobotSimulator{}
-  @allowed_directions [:north, :south, :east, :west]
   @allowed_instructions ["A", "R", "L"]
 
   @spec create(direction :: atom, position :: {integer, integer}) :: any
-  def create(direction \\ :north, position \\ {0, 0}) do
-    case position |> validate_position() do
-      {:ok, position} ->
-        case direction |> validate_direction() do
-          {:ok, direction} -> %RobotSimulator{direction: direction, position: position}
-          error -> error
-        end
+  def create(direction \\ :north, position \\ {0, 0})
 
-      error ->
-        error
-    end
-  end
+  def create(direction, position)
+      when is_position_valid(position) and is_direction_valid(direction),
+      do: %RobotSimulator{direction: direction, position: position}
 
-  defp validate_position(position)
-       when is_tuple(position) and :erlang.tuple_size(position) == 2 and
-              is_integer(elem(position, 0)) and is_integer(elem(position, 1)) do
-    {:ok, position}
-  end
+  def create(_, position) when not is_position_valid(position), do: {:error, "invalid position"}
 
-  defp validate_position(_) do
-    {:error, "invalid position"}
-  end
-
-  defp validate_direction(direction) when is_atom(direction) do
-    if Enum.member?(@allowed_directions, direction) do
-      {:ok, direction}
-    else
-      {:error, "invalid direction"}
-    end
-  end
-
-  defp validate_direction(_) do
-    {:error, "invalid direction"}
-  end
+  def create(direction, _) when not is_direction_valid(direction),
+    do: {:error, "invalid direction"}
 
   @doc """
   Simulate the robot's movement given a string of instructions.
@@ -57,23 +41,21 @@ defmodule RobotSimulator do
       instructions
       |> String.codepoints()
 
-    illegal_codepoints =
+    invalid_point_exists =
       codepoints
-      |> Enum.find(fn i -> not Enum.member?(@allowed_instructions, i) end)
+      |> Enum.any?(fn i -> not Enum.member?(@allowed_instructions, i) end)
 
-    case illegal_codepoints do
-      nil ->
-        codepoints
-        |> Enum.reduce(robot, fn instruction, acc ->
-          case instruction do
-            "R" -> acc |> turn_right()
-            "A" -> acc |> advance()
-            "L" -> acc |> turn_left()
-          end
-        end)
-
-      _ ->
-        {:error, "invalid instruction"}
+    if invalid_point_exists do
+      {:error, "invalid instruction"}
+    else
+      codepoints
+      |> Enum.reduce(robot, fn instruction, acc ->
+        case instruction do
+          "R" -> acc |> turn_right()
+          "A" -> acc |> advance()
+          "L" -> acc |> turn_left()
+        end
+      end)
     end
   end
 
@@ -90,7 +72,7 @@ defmodule RobotSimulator do
     }
   end
 
-  defp turn_left(%RobotSimulator{direction: direction, position: position} = robot) do
+  defp turn_left(%RobotSimulator{direction: direction} = robot) do
     %{
       robot
       | direction:
@@ -103,7 +85,7 @@ defmodule RobotSimulator do
     }
   end
 
-  defp turn_right(%RobotSimulator{direction: direction, position: position} = robot) do
+  defp turn_right(%RobotSimulator{direction: direction} = robot) do
     %{
       robot
       | direction:
@@ -122,15 +104,11 @@ defmodule RobotSimulator do
   Valid directions are: `:north`, `:east`, `:south`, `:west`
   """
   @spec direction(robot :: RobotSimulator.t()) :: atom
-  def direction(%RobotSimulator{direction: direction}) do
-    direction
-  end
+  def direction(%RobotSimulator{direction: direction}), do: direction
 
   @doc """
   Return the robot's position.
   """
   @spec position(robot :: RobotSimulator.t()) :: {integer, integer}
-  def position(%RobotSimulator{position: position}) do
-    position
-  end
+  def position(%RobotSimulator{position: position}), do: position
 end
