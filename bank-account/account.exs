@@ -56,19 +56,21 @@ defmodule BankAccount do
   end
 
   @impl true
-  def handle_call(:get_balance, _from, %BankAccount{balance: balance, is_closed: is_closed} = state) when is_closed == false do
+  def handle_call(_, _from, %BankAccount{is_closed: is_closed} = state) when is_closed == true do
+    {:reply, {:error, :account_closed}, state}
+  end
+
+  @impl true
+  def handle_call(:get_balance, _from, %BankAccount{balance: balance} = state) do
     {:reply, balance, state}
   end
 
   @impl true
-  def handle_call({:update_balance, amount}, _from, %BankAccount{balance: balance, is_closed: is_closed} = state) when is_closed == false do
+  def handle_call({:update_balance, amount}, _from, %BankAccount{balance: balance} = state) do
     {:reply, state, %{state | balance: balance + amount }}
   end
 
-  @impl true
-  def handle_call(_, _from, %BankAccount{is_closed: is_closed} = state) when is_closed == true do
-    {:reply, {:error, :account_closed}, state}
-  end
+
 
   @impl true
   def handle_call(:close, _from, state) do
