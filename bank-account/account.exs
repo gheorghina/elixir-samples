@@ -70,8 +70,6 @@ defmodule BankAccount do
     {:reply, state, %{state | balance: balance + amount }}
   end
 
-
-
   @impl true
   def handle_call(:close, _from, state) do
     {:reply, state, %{state | is_closed: true }}
