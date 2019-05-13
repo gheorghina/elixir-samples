@@ -119,13 +119,16 @@ defmodule Zipper do
 
   defp update_zipper(zipper, updated_focus, :root) do
     %{zipper | focus: updated_focus}
- end
+  end
+
+  defp update_zipper(%Zipper{trail: :root} = zipper, _, _), do: zipper
 
   defp update_zipper(zipper, updated_focus, [{direction, parent} | trail]) do
      {_, updated_parent} = parent |> Map.get_and_update!(direction, fn v -> {v, updated_focus} end)
+     updated_zipper = %{zipper | focus: updated_focus, trail: [{direction, updated_parent}] ++ trail}
 
-     Logger.warn("--->> updated_focus: #{inspect(updated_focus)} updated_parent: #{inspect(updated_parent)} ")
+     %Zipper{focus: node} = node_up = updated_zipper |> up()
 
-     %{zipper | focus: updated_focus, trail: [{direction, updated_parent}] ++ trail}
+    update_zipper(node_up, node, trail)
   end
 end
